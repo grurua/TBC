@@ -189,7 +189,7 @@
     background:var(--bg);z-index:30;
   }
   .search-box{
-    flex:1;height:44px;border-radius:22px;background:#E9EDF0;
+    flex:1;height:48px;border-radius:24px;background:#E9EDF0;
     display:flex;align-items:center;gap:9px;padding:0 12px 0 14px;cursor:text;
   }
   .search-box .q{display:flex;align-items:center;font-size:16.5px;min-width:0;overflow:hidden;white-space:nowrap;}
@@ -201,8 +201,9 @@
   .clear-q{margin-left:auto;border:none;background:none;color:#A9B1B8;cursor:pointer;display:none;padding:4px;transform-origin:center;}
   .search-box.has-q .clear-q{display:flex;animation:popIn .3s cubic-bezier(.45,1.45,.8,1);}
   .close-search{
-    width:44px;height:44px;border-radius:50%;background:#fff;border:none;flex:0 0 auto;
+    width:52px;height:52px;border-radius:50%;background:#fff;border:none;flex:0 0 auto;
     box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;color:var(--blue);cursor:pointer;
+    transform-origin:center;
   }
   .search-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 16px 300px;}
   .search-scroll::-webkit-scrollbar{display:none;}
@@ -1290,6 +1291,30 @@
   const box     = document.getElementById('search-box');
   const scroll  = document.getElementById('search-scroll');
   const emptyQ  = document.getElementById('empty-q');
+  const closeBtn = document.getElementById('close-search');
+  const kb       = document.getElementById('kb');
+
+  // damped-harmonic-oscillator spring, matching Figma's mass/stiffness/damping fields
+  function animateSpring(from, to, {stiffness, damping, mass = 1}, onUpdate, onDone){
+    let x = from, v = 0, last = null, id;
+    function step(now){
+      if(last === null) last = now;
+      const dt = Math.min((now - last) / 1000, 0.032);
+      last = now;
+      const a = (-stiffness * (x - to) - damping * v) / mass;
+      v += a * dt;
+      x += v * dt;
+      if(Math.abs(x - to) < 0.3 && Math.abs(v) < 0.3){
+        onUpdate(to);
+        if(onDone) onDone();
+        return;
+      }
+      onUpdate(x);
+      id = requestAnimationFrame(step);
+    }
+    id = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(id);
+  }
 
   const panels = {
     start:'panel-start', trans:'panel-trans', card:'panel-card', user:'panel-user',
@@ -1372,19 +1397,51 @@
 
   // ---- open / close ----
   // home stays mounted and visible; search crossfades in on top of it,
-  // rising together with the keyboard (matches native modal presentation)
+  // rising together with the keyboard (matches native modal presentation).
+  // The cancel button and keyboard settle via real spring physics rather
+  // than a CSS ease, matching the motion spec's mass/stiffness/damping.
+  let stopBtnSpring, stopKbSpring;
   function openSearch(preset){
     searchOpen = true;
     setQuery(preset || '');
+    closeBtn.style.transform = 'scale(.46)';
+    closeBtn.style.opacity = '0';
     requestAnimationFrame(() => {
       search.classList.add('open');
       search.classList.add('kb-open');
+
+      if(stopBtnSpring) stopBtnSpring();
+      stopBtnSpring = animateSpring(0, 1, {stiffness:300, damping:20}, t => {
+        closeBtn.style.transform = `scale(${0.46 + 0.54 * t})`;
+        closeBtn.style.opacity = t;
+      });
+
+      const kbHeight = kb.offsetHeight || 291;
+      kb.style.transition = 'none';
+      kb.style.transform = `translateY(${kbHeight}px)`;
+      if(stopKbSpring) stopKbSpring();
+      stopKbSpring = animateSpring(kbHeight, 0, {stiffness:100, damping:15}, y => {
+        kb.style.transform = `translateY(${y}px)`;
+      });
     });
   }
   function closeSearch(){
     searchOpen = false;
     search.classList.remove('kb-open');
     search.classList.remove('open');
+
+    if(stopBtnSpring) stopBtnSpring();
+    stopBtnSpring = animateSpring(1, 0, {stiffness:300, damping:20}, t => {
+      closeBtn.style.transform = `scale(${0.46 + 0.54 * t})`;
+      closeBtn.style.opacity = t;
+    });
+
+    const kbHeight = kb.offsetHeight || 291;
+    if(stopKbSpring) stopKbSpring();
+    stopKbSpring = animateSpring(0, kbHeight, {stiffness:100, damping:15}, y => {
+      kb.style.transform = `translateY(${y}px)`;
+    });
+
     q = '';
   }
 
