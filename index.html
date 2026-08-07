@@ -19,6 +19,7 @@
     --bg:#F2F5F7;
     --card:#FFFFFF;
     --green:#1EBD66;
+    --green-text:#008043;
     --red:#F2274C;
     --chip:#DFF4FC;
     --r-lg:20px;
@@ -253,13 +254,13 @@
   .row .rt .hl{display:inline;color:var(--blue);}
   .row .amt{text-align:right;white-space:nowrap;}
   .row .amt b{display:block;font-size:15px;font-weight:700;}
-  .row .amt .up{color:var(--green);font-size:12.5px;font-weight:700;}
+  .row .amt .up{color:var(--green-text);font-size:12.5px;font-weight:700;}
   .row .amt .down{color:var(--red);font-size:12.5px;font-weight:700;}
   .row .amt .neg{color:var(--red);}
   .row .amt span.sub{display:block;font-size:12.5px;color:var(--sub);font-weight:500;margin-top:2px;}
   .row .chev{color:var(--blue);flex:0 0 auto;}
 
-  .qa .av{background:#F1F4F6;color:var(--ink);}
+  .qa .av{background:#EEF1F1;color:var(--ink);}
   .hl{color:var(--blue);}
 
   /* most used grid */
@@ -294,8 +295,8 @@
   /* exchange hero */
   .fx-box{border:1px solid var(--line);border-radius:var(--r-md);padding:14px;position:relative;}
   .fx-line{display:flex;align-items:center;justify-content:space-between;padding:6px 0;}
-  .fx-line .l .lab{font-size:12.5px;color:var(--sub);display:block;margin-bottom:4px;}
-  .fx-line .l .val{font-size:26px;font-weight:800;display:flex;align-items:center;}
+  .fx-line .l .lab{font-size:12px;color:var(--sub);display:block;margin-bottom:4px;}
+  .fx-line .l .val{font-size:24px;font-weight:700;display:flex;align-items:center;}
   .fx-cur{display:flex;align-items:center;gap:7px;font-weight:700;font-size:15px;cursor:pointer;}
   .fx-cur .flag{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;overflow:hidden;background:#F1F4F6;}
   .fx-swap{
@@ -304,7 +305,7 @@
     display:flex;align-items:center;justify-content:center;color:var(--blue);cursor:pointer;
   }
   .fx-div{height:1px;background:var(--line);margin:4px 44px 4px 0;}
-  .pill-blue{background:var(--chip);color:var(--blue);border:none;border-radius:18px;padding:8px 16px;font-size:13.5px;font-weight:700;cursor:pointer;}
+  .pill-blue{background:rgba(0,173,238,.1);color:var(--blue);border:none;border-radius:1000px;padding:4px 16px;font-size:12px;font-weight:500;cursor:pointer;}
   .pill-blue:active{opacity:.7;}
 
   /* stock hero */
@@ -315,7 +316,7 @@
   .stock-num .p{font-size:30px;font-weight:800;}
   .stock-num .p small{font-size:22px;color:#9AA3AC;font-weight:800;}
   .stock-num .wk{font-size:13px;color:var(--sub);margin-top:6px;display:flex;gap:8px;align-items:center;}
-  .stock-num .wk .up{color:var(--green);font-weight:700;}
+  .stock-num .wk .up{color:var(--green-text);font-weight:700;}
 
   .help-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;cursor:pointer;font-size:15px;line-height:1.35;}
   .help-row:active{opacity:.6;}
@@ -852,9 +853,9 @@
 
         <div class="sec"><b>Transactions</b><a>Show more</a></div>
         <div class="group">
-          <div class="row"><span class="av" style="background:none;font-size:0;"><span style="position:absolute;left:0;top:0;font-size:26px;">🇺🇸</span><span style="position:absolute;right:-3px;bottom:-3px;font-size:19px;">🇬🇪</span></span><div class="rt"><b>USD → GEL</b><span>13 Aug, 12:45</span></div><div class="amt"><b style="color:var(--green);">+260.00₾</b><span class="sub">-100.00$</span></div></div>
-          <div class="row"><span class="av" style="background:none;font-size:0;"><span style="position:absolute;left:0;top:0;font-size:26px;">🇬🇪</span><span style="position:absolute;right:-3px;bottom:-3px;font-size:19px;">🇬🇧</span></span><div class="rt"><b>GEL → GBP</b><span>13 Aug, 12:45</span></div><div class="amt"><b style="color:var(--green);">+100.00£</b><span class="sub">-350.00₾</span></div></div>
-          <div class="row"><span class="av" style="background:none;font-size:0;"><span style="position:absolute;left:0;top:0;font-size:26px;">🇬🇪</span><span style="position:absolute;right:-3px;bottom:-3px;font-size:19px;">🇪🇺</span></span><div class="rt"><b>GEL → EUR</b><span>13 Aug, 12:45</span></div><div class="amt"><b style="color:var(--green);">+150.00€</b><span class="sub">-450.00₾</span></div></div>
+          <div class="row"><span class="av" style="background:none;font-size:0;"><span style="position:absolute;left:0;top:0;font-size:26px;">🇺🇸</span><span style="position:absolute;right:-3px;bottom:-3px;font-size:19px;">🇬🇪</span></span><div class="rt"><b>USD → GEL</b><span>13 Aug, 12:45</span></div><div class="amt"><b style="color:var(--green-text);">+260.00₾</b><span class="sub">-100.00$</span></div></div>
+          <div class="row"><span class="av" style="background:none;font-size:0;"><span style="position:absolute;left:0;top:0;font-size:26px;">🇬🇪</span><span style="position:absolute;right:-3px;bottom:-3px;font-size:19px;">🇬🇧</span></span><div class="rt"><b>GEL → GBP</b><span>13 Aug, 12:45</span></div><div class="amt"><b style="color:var(--green-text);">+100.00£</b><span class="sub">-350.00₾</span></div></div>
+          <div class="row"><span class="av" style="background:none;font-size:0;"><span style="position:absolute;left:0;top:0;font-size:26px;">🇬🇪</span><span style="position:absolute;right:-3px;bottom:-3px;font-size:19px;">🇪🇺</span></span><div class="rt"><b>GEL → EUR</b><span>13 Aug, 12:45</span></div><div class="amt"><b style="color:var(--green-text);">+150.00€</b><span class="sub">-450.00₾</span></div></div>
         </div>
 
         <div class="sec"><b>Help on the topic</b><a>See all</a></div>
