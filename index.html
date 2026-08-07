@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<title>TBC Concept — Search Prototype</title>
+<style>
+  :root{
+    --blue:#00A3E0;
+    --blue-soft:#E5F6FC;
+    --ink:#242B33;
+    --ink-2:#3A424B;
+    --sub:#9AA3AC;
+    --sub-2:#B6BDC4;
+    --line:#EEF1F3;
+    --bg:#F2F5F7;
+    --card:#FFFFFF;
+    --green:#1EBD66;
+    --red:#F2274C;
+    --chip:#DFF4FC;
+    --r-lg:20px;
+    --r-md:16px;
+    --shadow:0 1px 2px rgba(36,43,51,.04), 0 4px 14px rgba(36,43,51,.05);
+    font-size:16px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+  html,body{height:100%;-webkit-text-size-adjust:100%;}
+  body{
+    background:radial-gradient(120% 120% at 30% 20%,#EDF2F6 0%,#D8E1E8 55%,#C3CFD9 100%);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    min-height:100vh;min-height:100dvh;
+    overflow:hidden;position:fixed;inset:0;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ---------- Phone frame ---------- */
+  #phone{
+    width:393px;height:852px;background:var(--bg);
+    position:relative;overflow:hidden;
+    border-radius:0;
+  }
+  /* No device frame: this is the app itself, authored at iPhone 16
+     logical resolution (393x852pt / 1179x2556px @3x). On any viewport
+     wider than a phone, the 393x852 canvas is scaled to fit - never
+     reflowed - so every screen keeps exact iPhone 16 proportions. */
+  @media (min-width:480px){
+    #device{transform-origin:center center;}
+  }
+  @media (max-width:479px), (pointer:coarse) and (max-width:940px){
+    #device{width:100vw;height:100dvh;padding:0;}
+    .frame,.side-btn,.d-island,.home-ind{display:none;}
+    #phone{border-radius:0;}
+    body{align-items:stretch;background:var(--bg);position:fixed;inset:0;}
+    #phone{width:100vw;height:100dvh;}
+    .statusbar{height:calc(30px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);}
+    .home-head,.search-head,.notif-head{padding-top:calc(40px + env(safe-area-inset-top));}
+    .bottom-nav{height:calc(66px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);}
+    .home-body{padding-bottom:calc(84px + env(safe-area-inset-bottom));}
+    .kb{padding-bottom:calc(4px + env(safe-area-inset-bottom));}
+    .key{max-width:none;height:44px;}
+    .key.fn{max-width:12%;}
+    .kb-last .key123,.kb-last .ret{flex:0 0 24%;height:44px;}
+    .kb-last .space{height:44px;}
+    .search-scroll{padding-bottom:calc(310px + env(safe-area-inset-bottom));}
+    .notif-scroll{padding-bottom:calc(30px + env(safe-area-inset-bottom));}
+  }
+
+  /* ---------- Status bar ---------- */
+  .statusbar{
+    position:absolute;top:0;left:0;right:0;height:52px;z-index:60;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 22px 0 26px;pointer-events:none;
+  }
+  .statusbar .time{font-weight:600;font-size:15px;letter-spacing:.2px;}
+  .statusbar .icons{display:flex;align-items:center;gap:5px;}
+
+  /* ---------- Screens ---------- */
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);}
+  .screen.hidden{display:none;}
+  .scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .scroll::-webkit-scrollbar{display:none;}
+
+  /* ---------- HOME ---------- */
+  #screen-home{background:linear-gradient(180deg,#DCEFF9 0%,#EAF3F8 22%,var(--bg) 46%);}
+  .home-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:52px 16px 6px;
+  }
+  .circle-btn{
+    width:44px;height:44px;border-radius:50%;background:#fff;border:none;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    box-shadow:var(--shadow);color:var(--ink);flex:0 0 auto;
+  }
+  .circle-btn:active{transform:scale(.94);}
+  .home-head .brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16.5px;}
+  .brand .logo{width:22px;height:22px;}
+  .brand .sep{color:#C7CDD3;font-weight:400;}
+  .brand .chev{color:var(--ink);}
+  .head-right{display:flex;gap:10px;}
+
+  .home-search{padding:10px 16px 14px;}
+  .search-pill{
+    height:48px;border-radius:24px;background:rgba(255,255,255,.9);
+    display:flex;align-items:center;gap:10px;padding:0 16px;cursor:text;
+    box-shadow:var(--shadow);color:var(--sub);font-size:16px;
+  }
+  .search-pill svg{flex:0 0 auto;}
+
+  .home-body{padding:0 16px 96px;display:flex;flex-direction:column;gap:12px;}
+  .card{background:var(--card);border-radius:var(--r-lg);box-shadow:var(--shadow);}
+
+  .balance-card{padding:18px 18px 14px;}
+  .balance-top{display:flex;align-items:flex-start;justify-content:space-between;}
+  .balance-top .label{font-size:15px;color:var(--ink-2);}
+  .balance-top .tools{display:flex;gap:14px;color:var(--blue);}
+  .balance-top .tools svg{cursor:pointer;}
+  .balance-amount{font-size:34px;font-weight:800;letter-spacing:.3px;margin-top:6px;}
+  .balance-amount .lari{font-size:26px;font-weight:800;}
+  .acct-row{display:flex;align-items:center;gap:12px;margin-top:16px;}
+  .mini-card{
+    width:56px;height:38px;border-radius:8px;flex:0 0 auto;
+    background:linear-gradient(135deg,#F4C93C,#E8B62A);
+    position:relative;overflow:hidden;
+  }
+  .mini-card::before{content:"";position:absolute;left:7px;top:11px;width:12px;height:9px;border-radius:2px;background:rgba(255,255,255,.75);}
+  .mini-card::after{content:"";position:absolute;right:-10px;bottom:-14px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.28);}
+  .acct-row .t{flex:1;min-width:0;}
+  .acct-row .t b{display:block;font-size:15.5px;font-weight:600;}
+  .acct-row .t span{font-size:13px;color:var(--sub);}
+  .acct-row .amt{font-weight:700;font-size:15.5px;white-space:nowrap;}
+
+  .actions-strip{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px;}
+  .actions-strip::-webkit-scrollbar{display:none;}
+  .action-tile{
+    flex:0 0 auto;width:96px;min-height:88px;background:#fff;border-radius:var(--r-md);
+    box-shadow:var(--shadow);padding:12px;cursor:pointer;
+    display:flex;flex-direction:column;justify-content:space-between;gap:10px;
+  }
+  .action-tile:active{transform:scale(.97);}
+  .action-tile svg{color:var(--ink);}
+  .action-tile .cap{font-size:13px;line-height:1.25;color:var(--ink);}
+  .action-tile.stub{width:52px;align-items:center;justify-content:center;}
+
+  .loyalty{display:flex;align-items:center;gap:12px;padding:16px;cursor:pointer;}
+  .loyalty .name{flex:1;font-size:15.5px;font-weight:500;}
+  .loyalty .amt{font-weight:700;}
+
+  .offers-strip{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px;}
+  .offers-strip::-webkit-scrollbar{display:none;}
+  .offer{flex:0 0 316px;display:flex;gap:14px;padding:14px;position:relative;}
+  .offer .pic{width:84px;height:84px;border-radius:14px;flex:0 0 auto;overflow:hidden;position:relative;}
+  .offer .close{position:absolute;top:12px;right:12px;color:#AEB6BD;cursor:pointer;background:none;border:none;}
+  .offer h4{font-size:16px;font-weight:700;margin-bottom:6px;}
+  .offer .chip{
+    display:inline-flex;align-items:center;gap:5px;background:var(--chip);color:var(--blue);
+    font-size:10.5px;font-weight:800;letter-spacing:.4px;border-radius:20px;padding:4px 9px;margin-bottom:7px;
+  }
+  .offer .l1{font-size:14.5px;font-weight:600;}
+  .offer .l2{font-size:12.5px;color:var(--sub);margin-top:2px;}
+  .pic-loan{background:linear-gradient(135deg,#3E4A52,#68757D);}
+  .pic-goal{background:#EAF7FD;display:flex;align-items:center;justify-content:center;}
+
+  .home-peek{padding:0 16px 8px;font-size:16.5px;font-weight:700;}
+
+  .bottom-nav{
+    -webkit-user-select:none;user-select:none;
+    position:absolute;left:0;right:0;bottom:0;height:82px;z-index:40;
+    background:rgba(255,255,255,.94);backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);
+    display:flex;align-items:flex-start;padding:10px 6px 0;
+  }
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;border:none;background:none;cursor:pointer;color:#5B646D;font-size:11px;}
+  .nav-item .ic{width:44px;height:30px;border-radius:16px;display:flex;align-items:center;justify-content:center;}
+  .nav-item.active{color:var(--blue);font-weight:600;}
+  .nav-item.active .ic{background:var(--chip);}
+
+  /* ---------- SEARCH ---------- */
+  #screen-search{background:var(--bg);}
+  .search-head{
+    padding:52px 16px 10px;display:flex;align-items:center;gap:10px;
+    background:var(--bg);z-index:30;
+  }
+  .search-box{
+    flex:1;height:44px;border-radius:22px;background:#E9EDF0;
+    display:flex;align-items:center;gap:9px;padding:0 12px 0 14px;cursor:text;
+  }
+  .search-box .q{display:flex;align-items:center;font-size:16.5px;min-width:0;overflow:hidden;white-space:nowrap;}
+  .search-box .q .txt{color:var(--ink);font-weight:500;}
+  .search-box .q .ph{color:#A6AEB6;}
+  .caret{width:2px;height:20px;background:var(--blue);border-radius:2px;animation:blink 1.1s steps(1) infinite;flex:0 0 auto;}
+  @keyframes blink{50%{opacity:0;}}
+  .clear-q{margin-left:auto;border:none;background:none;color:#A9B1B8;cursor:pointer;display:none;padding:4px;}
+  .search-box.has-q .clear-q{display:flex;}
+  .close-search{
+    width:44px;height:44px;border-radius:50%;background:#fff;border:none;flex:0 0 auto;
+    box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;color:var(--blue);cursor:pointer;
+  }
+  .search-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 16px 300px;}
+  .search-scroll::-webkit-scrollbar{display:none;}
+  .panel{display:none;flex-direction:column;gap:6px;animation:fadein .18s ease;}
+  .panel.active{display:flex;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .sec{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 8px;}
+  .sec b{font-size:15.5px;font-weight:700;}
+  .sec a{font-size:14.5px;color:var(--blue);font-weight:600;text-decoration:none;cursor:pointer;}
+
+  .group{background:#fff;border-radius:var(--r-lg);box-shadow:var(--shadow);padding:6px 14px;}
+
+  .row{display:flex;align-items:center;gap:12px;padding:11px 0;cursor:pointer;}
+  .row:active{opacity:.65;}
+  .row .av{
+    width:42px;height:42px;border-radius:50%;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:14px;color:#fff;position:relative;overflow:visible;
+  }
+  .row .av.soft{background:#F1F4F6;color:var(--ink);}
+  .row .av .badge{
+    position:absolute;right:-2px;bottom:-2px;width:15px;height:15px;border-radius:50%;
+    background:var(--green);border:2px solid #fff;display:flex;align-items:center;justify-content:center;
+  }
+  .row .rt{flex:1;min-width:0;}
+  .row .rt b{display:block;font-size:15.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .row .rt span{display:block;font-size:13px;color:var(--sub);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .row .amt{text-align:right;white-space:nowrap;}
+  .row .amt b{display:block;font-size:15px;font-weight:700;}
+  .row .amt .up{color:var(--green);font-size:12.5px;font-weight:700;}
+  .row .amt .down{color:var(--red);font-size:12.5px;font-weight:700;}
+  .row .amt .neg{color:var(--red);}
+  .row .amt span.sub{display:block;font-size:12.5px;color:var(--sub);font-weight:500;margin-top:2px;}
+  .row .chev{color:var(--blue);flex:0 0 auto;}
+
+  .qa .av{background:#F1F4F6;color:var(--ink);}
+  .hl{color:var(--blue);}
+
+  /* most used grid */
+  .mu-grid{display:flex;padding:14px 4px;}
+  .mu{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:none;background:none;}
+  .mu:active{opacity:.6;}
+  .mu .b{width:48px;height:48px;border-radius:50%;background:var(--chip);color:var(--blue);display:flex;align-items:center;justify-content:center;}
+  .mu span{font-size:12px;color:var(--ink);line-height:1.25;text-align:center;}
+
+  /* recents */
+  .recent{display:flex;align-items:center;gap:14px;padding:12px 2px;cursor:pointer;}
+  .recent:active{background:#EDF1F3;border-radius:10px;}
+  .recent svg{color:#79828B;flex:0 0 auto;}
+  .recent span{flex:1;font-size:15.5px;}
+  .recent .rm{border:none;background:none;color:#8B949C;cursor:pointer;padding:6px;display:flex;}
+
+  /* transfer hero (Gio) */
+  .hero{background:#fff;border-radius:var(--r-lg);box-shadow:var(--shadow);padding:18px 16px 16px;margin-top:8px;}
+  .hero .who{display:flex;align-items:center;gap:12px;}
+  .hero .who .av{width:44px;height:44px;border-radius:50%;background:#EFE9FB;color:#8B7AC1;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  .hero .who b{display:block;font-size:15.5px;}
+  .hero .who span{font-size:13px;color:var(--sub);}
+  .hero .big{font-size:34px;font-weight:800;text-align:center;margin:18px 0 16px;}
+  .btn-primary{
+    width:100%;height:50px;border:none;border-radius:25px;background:#2CB4E8;
+    color:#fff;font-size:16.5px;font-weight:600;cursor:pointer;
+  }
+  .btn-primary:active{background:#1FA5DA;}
+
+  /* exchange hero */
+  .fx-box{border:1px solid var(--line);border-radius:var(--r-md);padding:14px;position:relative;}
+  .fx-line{display:flex;align-items:center;justify-content:space-between;padding:6px 0;}
+  .fx-line .l .lab{font-size:12.5px;color:var(--sub);display:block;margin-bottom:4px;}
+  .fx-line .l .val{font-size:26px;font-weight:800;display:flex;align-items:center;}
+  .fx-cur{display:flex;align-items:center;gap:7px;font-weight:700;font-size:15px;cursor:pointer;}
+  .fx-cur .flag{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;overflow:hidden;background:#F1F4F6;}
+  .fx-swap{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:34px;height:34px;border-radius:50%;background:#fff;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--blue);cursor:pointer;
+  }
+  .fx-div{height:1px;background:var(--line);margin:4px 44px 4px 0;}
+  .pill-blue{background:var(--chip);color:var(--blue);border:none;border-radius:18px;padding:8px 16px;font-size:13.5px;font-weight:700;cursor:pointer;}
+  .pill-blue:active{opacity:.7;}
+
+  /* stock hero */
+  .stock-hero{display:flex;flex-direction:column;gap:6px;padding:16px;}
+  .stock-hero .co{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15.5px;}
+  .stock-hero .co .lg{width:34px;height:34px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;}
+  .stock-grid{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;}
+  .stock-num .p{font-size:30px;font-weight:800;}
+  .stock-num .p small{font-size:22px;color:#9AA3AC;font-weight:800;}
+  .stock-num .wk{font-size:13px;color:var(--sub);margin-top:6px;display:flex;gap:8px;align-items:center;}
+  .stock-num .wk .up{color:var(--green);font-weight:700;}
+
+  .help-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;cursor:pointer;font-size:15px;line-height:1.35;}
+  .help-row:active{opacity:.6;}
+  .help-row + .help-row{border-top:1px solid var(--line);}
+  .help-row .chev{color:var(--blue);flex:0 0 auto;}
+
+  .empty-state{padding:60px 30px;text-align:center;color:var(--sub);}
+  .empty-state .big{font-size:40px;margin-bottom:14px;}
+  .empty-state b{color:var(--ink);display:block;font-size:16px;margin-bottom:6px;}
+
+  /* ---------- Keyboard ---------- */
+  .kb{
+    position:absolute;left:0;right:0;bottom:0;z-index:50;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    background:#D3D7DE;padding:8px 3px 4px;user-select:none;
+    transform:translateY(110%);transition:transform .25s ease;
+  }
+  .screen.kb-open .kb{transform:none;}
+  .kb-sugg{display:flex;margin:0 4px 8px;}
+  .kb-sugg div{flex:1;text-align:center;font-size:16.5px;padding:8px 0;color:var(--ink);cursor:pointer;position:relative;}
+  .kb-sugg div + div::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:1px;background:#BFC4CC;}
+  .kb-row{display:flex;justify-content:center;gap:6px;margin-bottom:9px;padding:0 3px;}
+  .key{
+    flex:1;max-width:33px;height:42px;border-radius:6px;background:#fff;border:none;
+    box-shadow:0 1px 0 rgba(0,0,0,.3);font-size:21px;color:#111;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-family:inherit;
+  }
+  .key:active{background:#BFC7CF;}
+  .key.fn{background:#AEB4BF;max-width:44px;font-size:15px;}
+  .kb-row.r2{padding:0 20px;}
+  .kb-last{display:flex;gap:6px;padding:0 3px;margin-bottom:6px;}
+  .kb-last .key123{flex:0 0 90px;height:42px;border-radius:6px;background:#AEB4BF;border:none;font-size:15.5px;box-shadow:0 1px 0 rgba(0,0,0,.3);cursor:default;}
+  .kb-last .space{flex:1;height:42px;border-radius:6px;background:#fff;border:none;box-shadow:0 1px 0 rgba(0,0,0,.3);cursor:pointer;}
+  .kb-last .ret{flex:0 0 90px;height:42px;border-radius:6px;background:#AEB4BF;border:none;font-size:19px;box-shadow:0 1px 0 rgba(0,0,0,.3);cursor:pointer;}
+  .kb-foot{display:flex;justify-content:space-between;padding:6px 26px 8px;color:#4A5058;font-size:21px;}
+
+  /* ---------- NOTIFICATIONS ---------- */
+  #screen-notif{background:var(--bg);}
+  .notif-head{display:flex;align-items:center;gap:12px;padding:52px 16px 8px;}
+  .notif-head h1{font-size:19px;font-weight:800;flex:1;}
+  .icon-plain{border:none;background:none;cursor:pointer;color:var(--ink);display:flex;padding:6px;}
+  .back-btn{width:40px;height:40px;border-radius:50%;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);flex:0 0 auto;margin-left:-8px;}
+  .back-btn:active{background:#E7EBEE;}
+  .chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:8px 16px 4px;}
+  .chips::-webkit-scrollbar{display:none;}
+  .chip-f{flex:0 0 auto;height:36px;padding:0 15px;border-radius:10px;border:1px solid #E2E7EA;background:#fff;font-size:13.5px;color:var(--ink);cursor:pointer;font-family:inherit;}
+  .chip-f.on{background:#1D46C8;border-color:#1D46C8;color:#fff;font-weight:600;}
+  .notif-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:6px 16px 40px;}
+  .notif-scroll::-webkit-scrollbar{display:none;}
+  .day-h{font-size:18px;font-weight:800;padding:16px 2px 10px;}
+  .ncard{
+    background:#fff;border-radius:18px;box-shadow:var(--shadow);
+    padding:15px 14px;margin-bottom:12px;display:flex;gap:12px;cursor:pointer;
+    transition:background .3s ease;
+  }
+  .ncard.unread{background:#D9D7EE;}
+  .ncard .nic{width:42px;height:42px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:#fff;}
+  .ncard:active{transform:scale(.985);}
+  .ncard{transition:background .3s ease, transform .12s ease;}
+  .ncard .nic.line{background:#fff;border:1.5px solid #2A3138;color:#2A3138;}
+  .ncard .nc{flex:1;min-width:0;}
+  .ncard .nrow1{display:flex;align-items:flex-start;gap:8px;}
+  .ncard .nt{font-size:15.5px;font-weight:700;flex:1;line-height:1.3;}
+  .ncard .ntime{font-size:12.5px;color:var(--sub);white-space:nowrap;padding-top:2px;}
+  .ncard .nsub{font-size:13.5px;color:var(--ink-2);margin-top:4px;line-height:1.45;}
+  .ncard .nsub.dim{color:var(--sub);}
+  .ncard .offer-tag{display:inline-block;background:#DDF2FA;color:#20303B;font-size:12.5px;border-radius:14px;padding:4px 10px;margin-top:6px;}
+  .ncard.unread .offer-tag{background:#CFEAF6;}
+  .n-actions{display:flex;align-items:center;gap:18px;margin-top:10px;}
+  .n-btn{border:none;border-radius:10px;background:#E3E1F7;color:#2246C7;font-size:13.5px;font-weight:600;padding:9px 14px;cursor:pointer;font-family:inherit;}
+  .n-btn:active{opacity:.7;}
+  .ncard.unread .n-btn{background:#C9C6EA;}
+  .n-link{border:none;background:none;color:#2246C7;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;padding:9px 0;}
+  .n-declined{color:var(--red);font-size:13.5px;font-weight:600;margin-top:10px;}
+  .n-confirmed{color:var(--sub);font-size:13.5px;margin-top:10px;}
+  .n-body{display:flex;gap:10px;margin-top:2px;}
+  .n-body .txt{flex:1;min-width:0;}
+  .n-thumb{width:88px;height:74px;border-radius:10px;flex:0 0 auto;overflow:hidden;}
+  .bell-dot{position:absolute;top:10px;right:11px;width:9px;height:9px;border-radius:50%;background:var(--red);border:2px solid #fff;}
+  /* Home transactions card */
+  .tx-card{padding:16px 16px 4px;}
+  .tx-card h3{font-size:16.5px;font-weight:700;}
+  .tx-date{font-size:13px;color:var(--sub);margin:12px 0 2px;}
+
+  /* ---------- iPhone 16 mockup (desktop only) ---------- */
+  #device{
+    position:relative;
+    width:423px;height:882px;      /* 393x852 screen + 15px bezel */
+    padding:15px;flex:0 0 auto;
+  }
+  .frame{
+    position:absolute;inset:0;border-radius:62px;z-index:0;
+    background:linear-gradient(145deg,#4a4d52 0%,#26282c 30%,#131417 60%,#3b3e43 100%);
+    box-shadow:
+      0 60px 120px rgba(15,20,28,.45),
+      0 24px 48px rgba(15,20,28,.35),
+      inset 0 0 3px rgba(255,255,255,.35);
+  }
+  .frame::before{ /* glass bezel */
+    content:"";position:absolute;inset:4px;border-radius:58px;background:#050506;
+  }
+  .frame::after{ /* rim highlight */
+    content:"";position:absolute;inset:1px;border-radius:61px;
+    border:1px solid rgba(255,255,255,.16);pointer-events:none;
+  }
+  .side-btn{
+    position:absolute;background:linear-gradient(90deg,#5a5d63,#2b2d31 40%,#5a5d63);
+    border-radius:3px;z-index:0;
+  }
+  .side-btn.action{left:-2.5px;top:172px;width:5px;height:32px;}
+  .side-btn.vol-up{left:-2.5px;top:232px;width:5px;height:60px;}
+  .side-btn.vol-dn{left:-2.5px;top:304px;width:5px;height:60px;}
+  .side-btn.power{right:-2.5px;top:264px;width:5px;height:96px;}
+  .side-btn.camera{right:-2.5px;top:392px;width:5px;height:34px;}
+  #phone{position:relative;z-index:1;border-radius:47px;}
+  .d-island{
+    position:absolute;left:50%;top:12px;transform:translateX(-50%);
+    width:124px;height:36px;border-radius:19px;background:#050506;
+    z-index:80;pointer-events:none;
+    box-shadow:inset 0 0 2px rgba(255,255,255,.08);
+  }
+  .d-island::after{ /* camera lens glint */
+    content:"";position:absolute;right:11px;top:50%;transform:translateY(-50%);
+    width:11px;height:11px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#2a3a55 0 25%,#0a0f18 70%);
+  }
+  .home-ind{
+    position:absolute;left:50%;bottom:9px;transform:translateX(-50%);
+    width:140px;height:5px;border-radius:3px;background:rgba(20,26,32,.9);
+    z-index:80;pointer-events:none;
+  }
+</style>
+</head>
+<body>
+<div id="device">
+  <div class="frame"></div>
+  <div class="side-btn action"></div>
+  <div class="side-btn vol-up"></div>
+  <div class="side-btn vol-dn"></div>
+  <div class="side-btn power"></div>
+  <div id="phone">
+  <div class="d-island"></div>
+  <div class="home-ind"></div>
+
+  <!-- STATUS BAR -->
+  <div class="statusbar">
+    <span class="time">9:41</span>
+    <span class="icons">
+      <svg width="18" height="11" viewBox="0 0 18 11" fill="none"><rect x="0" y="7" width="3" height="4" rx="1" fill="#242B33"/><rect x="5" y="5" width="3" height="6" rx="1" fill="#242B33"/><rect x="10" y="2.5" width="3" height="8.5" rx="1" fill="#242B33"/><rect x="15" y="0" width="3" height="11" rx="1" fill="#242B33" opacity=".35"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 11.5 5.6 9.1a3.4 3.4 0 0 1 4.8 0L8 11.5Z" fill="#242B33"/><path d="M3.3 6.8a6.7 6.7 0 0 1 9.4 0" stroke="#242B33" stroke-width="1.7" stroke-linecap="round"/><path d="M.9 4.2a10.2 10.2 0 0 1 14.2 0" stroke="#242B33" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="21" height="11" rx="3" stroke="#242B33" opacity=".4"/><rect x="2" y="2" width="18" height="8" rx="1.6" fill="#242B33"/><path d="M23 4v4a2.2 2.2 0 0 0 0-4Z" fill="#242B33" opacity=".4"/></svg>
+    </span>
+  </div>
+
+  <!-- ================= HOME ================= -->
+  <div id="screen-home" class="screen">
+    <div class="scroll">
+      <div class="home-head">
+        <button class="circle-btn" aria-label="Menu">
+          <svg width="20" height="16" viewBox="0 0 20 16" fill="none"><path d="M1 2h18M1 8h12M1 14h18" stroke="#242B33" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <div class="brand">
+          <svg class="logo" viewBox="0 0 24 24" fill="none"><path d="M12 3 21 20H3L12 3Z" fill="#0B1F33"/><path d="M12 9.5 16.6 18H7.4L12 9.5Z" fill="#fff"/></svg>
+          <span class="sep">|</span>
+          <span>concept</span>
+          <svg class="chev" width="12" height="7" viewBox="0 0 12 7" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="head-right">
+          <button class="circle-btn" aria-label="Messages">
+            <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M4 4h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8l-4 3V6a2 2 0 0 1 2-2Z" stroke="#242B33" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9.5h6M8 12.5h3.5" stroke="#242B33" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <button class="circle-btn" id="open-notif" aria-label="Notifications" style="position:relative;">
+            <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M11 3a6 6 0 0 0-6 6v3.5L3.6 15A1 1 0 0 0 4.5 16.5h13a1 1 0 0 0 .9-1.5L17 12.5V9a6 6 0 0 0-6-6Z" stroke="#242B33" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 19a2.2 2.2 0 0 0 4 0" stroke="#242B33" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span class="bell-dot" id="bell-dot"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="home-search">
+        <div class="search-pill" id="open-search">
+          <svg width="19" height="19" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.2" stroke="#9AA3AC" stroke-width="1.9"/><path d="m13.8 13.8 4 4" stroke="#9AA3AC" stroke-width="1.9" stroke-linecap="round"/></svg>
+          Ask or search anything
+        </div>
+      </div>
+
+      <div class="home-body">
+        <!-- Balance -->
+        <div class="card balance-card">
+          <div class="balance-top">
+            <span class="label">Total Available</span>
+            <span class="tools">
+              <svg width="19" height="19" viewBox="0 0 20 20" fill="none"><path d="m3 14.5 9.3-9.3a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3L5.5 17H3v-2.5Z" stroke="#00A3E0" stroke-width="1.7" stroke-linejoin="round"/></svg>
+              <svg width="21" height="19" viewBox="0 0 22 20" fill="none"><path d="M3 3l16 14M8.5 5.2A9.6 9.6 0 0 1 11 4.8c4.5 0 8 3.6 9 5.2-.4.7-1.4 1.9-2.8 3M5.1 6.6C3.4 7.9 2.3 9.4 2 10c1 1.6 4.5 5.2 9 5.2 1 0 2-.2 2.9-.5" stroke="#00A3E0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+          <div class="balance-amount">1 000.00 <span class="lari">₾</span></div>
+          <div class="acct-row">
+            <div class="mini-card"></div>
+            <div class="t"><b>Primary card</b><span>Secondary text</span></div>
+            <span class="amt">500.00 ₾</span>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="actions-strip">
+          <div class="action-tile">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 17 17 5M8 5h9v9" stroke="#242B33" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="cap">Transfer to others</span>
+          </div>
+          <div class="action-tile">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M17.5 8A7 7 0 0 0 5 6.5M4.5 14a7 7 0 0 0 12.5 1.5" stroke="#242B33" stroke-width="1.9" stroke-linecap="round"/><path d="M5 2.5v4h4M17 19.5v-4h-4" stroke="#242B33" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="cap">Exchange Money</span>
+          </div>
+          <div class="action-tile">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 3h6v6H3zM13 3h6v6h-6zM3 13h6v6H3z" stroke="#242B33" stroke-width="1.8"/><path d="M13 13h2.5v2.5H13zM16.5 16.5H19V19h-2.5zM13 16.5h2.5M16.5 13H19" stroke="#242B33" stroke-width="1.8"/></svg>
+            <span class="cap">QR</span>
+          </div>
+          <div class="action-tile stub">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="m3 14.5 9.3-9.3a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3L5.5 17H3v-2.5Z" stroke="#242B33" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+
+        <!-- Loyalty -->
+        <div class="card loyalty">
+          <svg width="34" height="32" viewBox="0 0 34 32" fill="none"><path d="M9 4 2 11l7 7 7-7-7-7Z" fill="#1D6FE0"/><path d="M17 4l-4 4 9 9 5-5c1.6-1.6 1.6-4.2 0-5.8l-2.2-2.2c-1.6-1.6-4.2-1.6-5.8 0Z" fill="#2FA8F5"/><path d="M12 15c0 7 5 12 10 13 3.6-.7 7-3.6 8.6-7.6L22 12l-10 3Z" fill="#FFC93C"/></svg>
+          <span class="name">Loyalty Reward</span>
+          <span class="amt">123.00 ₾</span>
+        </div>
+
+        <!-- Offers -->
+        <div class="offers-strip">
+          <div class="card offer">
+            <div class="pic pic-loan">
+              <svg width="84" height="84" viewBox="0 0 84 84"><rect width="84" height="84" fill="#4A565E"/><circle cx="26" cy="30" r="10" fill="#C9A88C"/><rect x="14" y="42" width="26" height="26" rx="8" fill="#8C9AA3"/><rect x="40" y="56" width="34" height="14" rx="3" fill="#E8E2D8"/><rect x="44" y="52" width="26" height="5" rx="2" fill="#22292F"/><circle cx="66" cy="20" r="12" fill="#5E9C6F" opacity=".85"/></svg>
+            </div>
+            <div>
+              <h4>Consumer Loan</h4>
+              <span class="chip"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="#00A3E0" stroke-width="2" stroke-linecap="round"/></svg>FOR YOU</span>
+              <div class="l1">10 000 ₾</div>
+              <div class="l2">Effective: from 18%</div>
+            </div>
+            <button class="close" aria-label="Dismiss">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <div class="card offer">
+            <div class="pic pic-goal">
+              <svg width="62" height="62" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" stroke="#BFE7F7" stroke-width="3" stroke-dasharray="4 6" stroke-linecap="round"/><path d="M22 20h20v6a10 10 0 0 1-20 0v-6Z" stroke="#00A3E0" stroke-width="2.6" stroke-linejoin="round"/><path d="M22 23h-4a5 5 0 0 0 6 6M42 23h4a5 5 0 0 1-6 6" stroke="#00A3E0" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 36v6M26 46h12" stroke="#00A3E0" stroke-width="2.6" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <h4>My&nbsp; Goal</h4>
+              <span class="chip"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="#00A3E0" stroke-width="2" stroke-linecap="round"/></svg>START SAVING</span>
+              <div class="l2" style="margin-top:4px;">Interest rate: 10%</div>
+            </div>
+            <button class="close" aria-label="Dismiss">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="card tx-card">
+          <h3>Transactions</h3>
+          <div class="tx-date">3 January, 2025</div>
+          <div class="row"><span class="av" style="background:#E85BB4;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M11 4c1.8 1.6 4.6 1.9 6 1.2-.2 5.4-2.4 9.6-6 11.8-3.6-2.2-5.8-6.4-6-11.8 1.4.7 4.2.4 6-1.2Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.5 9.5c.8 1.7 4.2 1.7 5 0" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg></span><div class="rt"><b>Voulez vous</b><span>Beauty</span></div><div class="amt"><b class="neg">-567.11₾</b></div></div>
+          <div class="row"><span class="av" style="background:#2BB5A0;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="7" cy="15.5" r="2.3" stroke="#fff" stroke-width="1.6"/><circle cx="16" cy="15.5" r="2.3" stroke="#fff" stroke-width="1.6"/><path d="M9.3 15.5h4.4M16 13.2 14.2 8H10M6 10.5h4.5l1.5 5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="rt"><b>Wolt</b><span>Delivery</span></div><div class="amt"><b class="neg">-92.05₾</b></div></div>
+          <div class="row"><span class="av" style="background:#E23B3B;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M5 4v6a2.5 2.5 0 0 0 5 0V4M7.5 4v14M15.5 4c-1.7 1.3-2.5 3.6-2.5 6 0 1.4 1 2.2 2.5 2.2V18" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="rt"><b>Entree</b><span>Bakery</span></div><div class="amt"><b class="neg">-64.30₾</b></div></div>
+          <div class="row"><span class="av" style="background:#F0B429;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M6 3h10v16l-2.5-1.6L11 19l-2.5-1.6L6 19V3Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 7.5h4.5M9 10.5h4.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></span><div class="rt"><b>Bills</b><span>Utilities</span></div><div class="amt"><b class="neg">-48.00₾</b></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+      <button class="nav-item active"><span class="ic"><svg width="21" height="21" viewBox="0 0 22 22" fill="none"><path d="M3.5 9.5 11 3l7.5 6.5V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18V9.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>Home</button>
+      <button class="nav-item"><span class="ic"><svg width="21" height="21" viewBox="0 0 22 22" fill="none"><path d="M11 2.5 19 7v8l-8 4.5L3 15V7l8-4.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3.5 7.3 11 11.5l7.5-4.2M11 11.5v7.8" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>Products</button>
+      <button class="nav-item"><span class="ic"><svg width="21" height="21" viewBox="0 0 22 22" fill="none"><path d="M4 8h13l-3-3M18 14H5l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Transfers</button>
+      <button class="nav-item"><span class="ic"><svg width="21" height="21" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="12" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h16" stroke="currentColor" stroke-width="1.8"/></svg></span>Payment</button>
+      <button class="nav-item"><span class="ic"><svg width="21" height="21" viewBox="0 0 22 22" fill="none"><path d="M11 18.5S3.5 14 3.5 8.6A4.1 4.1 0 0 1 11 6.3a4.1 4.1 0 0 1 7.5 2.3C18.5 14 11 18.5 11 18.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>offers</button>
+    </div>
+  </div>
+
+  <!-- ================= SEARCH ================= -->
+  <div id="screen-search" class="screen hidden">
+    <div class="search-head">
+      <div class="search-box" id="search-box">
+        <svg width="19" height="19" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.2" stroke="#79828B" stroke-width="1.9"/><path d="m13.8 13.8 4 4" stroke="#79828B" stroke-width="1.9" stroke-linecap="round"/></svg>
+        <span class="q" id="q-render"><span class="caret"></span><span class="ph">Search anything</span></span>
+        <button class="clear-q" id="clear-q" aria-label="Clear">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#A9B1B8"/><path d="M6.8 6.8l6.4 6.4M13.2 6.8l-6.4 6.4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <button class="close-search" id="close-search" aria-label="Close search">
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2 2 14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="search-scroll" id="search-scroll">
+
+      <!-- ===== START ===== -->
+      <div class="panel active" id="panel-start">
+        <div class="sec"><b>Most used</b><a>Show more</a></div>
+        <div class="group mu-grid" style="padding:14px 4px;">
+          <button class="mu" data-q="Trans"><span class="b"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="8" cy="6.5" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M3 17c.6-3 2.6-4.5 5-4.5 1 0 2 .3 2.8.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M13 13.5 19 12l-1.5 6-2-2.4-2.5.9V13.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span>Transfer to someone</span></button>
+          <button class="mu" data-q="Pay"><span class="b"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M6 3h10v16l-2.5-1.6L11 19l-2.5-1.6L6 19V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 7.5h4.5M9 10.5h4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><span>Pay Bills</span></button>
+          <button class="mu" data-q="Trans"><span class="b"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2.5" y="6" width="13" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M2.5 9.5h13" stroke="currentColor" stroke-width="1.7"/><path d="M17 8.5a4.5 4.5 0 1 1-3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="m14.5 16-1 1.6 1.9.3" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span><span>From other bank 24/7</span></button>
+          <button class="mu" data-q="Car"><span class="b"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 13.5 5.5 8.6A2 2 0 0 1 7.4 7.2h7.2a2 2 0 0 1 1.9 1.4L18 13.5M4 13.5h14M4 13.5v3.3h2.2v-1.4h9.6v1.4H18v-3.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Auto comfort</span></button>
+        </div>
+
+        <div class="sec"><b>Resent searches</b><a id="clear-all">Clear all</a></div>
+        <div class="group" id="recent-list" style="padding:6px 14px;">
+          <div class="recent" data-q="Trans"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><circle cx="8" cy="6.5" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M3 17c.6-3 2.6-4.5 5-4.5 1 0 2 .3 2.8.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M13 13.5 19 12l-1.5 6-2-2.4-2.5.9V13.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Transfer to someone</span><button class="rm"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>
+          <div class="recent" data-q="Pay"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="M6 3h10v16l-2.5-1.6L11 19l-2.5-1.6L6 19V3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 7.5h4.5M9 10.5h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>Pay bills</span><button class="rm"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>
+          <div class="recent" data-q="Trans"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><rect x="2.5" y="6" width="13" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 9.5h13" stroke="currentColor" stroke-width="1.6"/><path d="M17 8.5a4.5 4.5 0 1 1-3 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>From another bank</span><button class="rm"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>
+          <div class="recent" data-q="Car"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="M4 13.5 5.5 8.6A2 2 0 0 1 7.4 7.2h7.2a2 2 0 0 1 1.9 1.4L18 13.5M4 13.5h14M4 13.5v3.3h2.2v-1.4h9.6v1.4H18v-3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Auto comfort</span><button class="rm"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>
+          <div class="recent" data-q="Incurance"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="M11 2.5 18.5 5v5c0 4.6-3 8-7.5 9.5C6.5 18 3.5 14.6 3.5 10V5L11 2.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 10.8 10.2 13l4-4.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Incurance</span><button class="rm"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>
+          <div class="recent" data-q="Travel"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="M3 15.5 19 9.8c1-.4 1.6-1.5 1.2-2.3-.3-.8-1.4-1.1-2.4-.7l-4.4 1.6L6.5 5 4.6 5.7 9.6 10 5 11.7 2.6 10.4 1 11l2 4.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M3 19h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>Travel</span><button class="rm"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>
+          <div class="recent" data-q="Nino"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7" r="3.4" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 18.5c.9-3.6 3.4-5.4 6.5-5.4s5.6 1.8 6.5 5.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>Nino</span><button class="rm"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>
+          <div class="recent" data-q="Card"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><rect x="2.5" y="5" width="17" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M2.5 9h17" stroke="currentColor" stroke-width="1.7"/></svg><span>Card</span><button class="rm"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>
+          <div class="recent" data-q="Depost"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><rect x="2.5" y="5" width="17" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M11 8v6M8 11h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>Depost</span><button class="rm"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>
+          <div class="recent" data-q="Other Banks"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="M2.5 8.5 11 3l8.5 5.5h-17Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4.5 8.5V16M9 8.5V16M13 8.5V16M17.5 8.5V16M2.5 16h17M2 19h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>Other Banks</span><button class="rm"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>
+        </div>
+      </div>
+
+      <!-- ===== TRANS ===== -->
+      <div class="panel" id="panel-trans">
+        <div class="sec"><b>Quick actions</b></div>
+        <div class="group">
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="8" cy="6.5" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M3 17c.6-3 2.6-4.5 5-4.5 1 0 2 .3 2.8.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M13 13.5 19 12l-1.5 6-2-2.4-2.5.9V13.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span><div class="rt"><b class="m">Transfer to someone</b><span>Standard transfer within or outside the Bank</span></div></div>
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.7"/><path d="M3 11h16M11 3c2.2 2.2 3.3 5 3.3 8s-1.1 5.8-3.3 8c-2.2-2.2-3.3-5-3.3-8s1.1-5.8 3.3-8Z" stroke="currentColor" stroke-width="1.6"/></svg></span><div class="rt"><b class="m">International transfer</b><span>Bank transfers to 200+ countries worldwide</span></div></div>
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M2.5 8.5 11 3l8.5 5.5h-17Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M5 8.5V15M11 8.5V15M17 8.5V15M2.5 15h17M2 18h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><div class="rt"><b class="m">Transfer to treasury</b><span>Tax type transfers</span></div></div>
+        </div>
+
+        <div class="sec"><b>Transactions</b><a>See all</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:#9B5BE0;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M11 18s-6-3.6-6-8a3.3 3.3 0 0 1 6-1.9A3.3 3.3 0 0 1 17 10c0 4.4-6 8-6 8Z" fill="#fff"/><path d="M9 10h4M11 8v4" stroke="#9B5BE0" stroke-width="1.4" stroke-linecap="round"/></svg></span><div class="rt"><b class="m">Aversi</b><span>25 Aug, 15:30</span></div><div class="amt"><b>249.15₾</b></div></div>
+          <div class="row"><span class="av" style="background:linear-gradient(135deg,#B8927A,#7E6350);">GB<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Giorgi Beridze</b><span>13 Aug, 12:45</span></div><div class="amt"><b>130.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:#2FCB77;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="800" fill="#fff" font-family="inherit">G</text></svg><span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Glovo</b><span>9 Aug, 13:00</span></div><div class="amt"><b>17.23₾</b></div></div>
+        </div>
+
+        <div class="sec"><b>Products</b><a>Show more</a></div>
+        <div class="group">
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M4 8h13l-3-3M18 14H5l3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="rt"><b class="m" style="font-weight:500;">Transfers</b></div></div>
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M6 3h10v16l-2.5-1.6L11 19l-2.5-1.6L6 19V3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 7.5h4.5M9 10.5h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><div class="rt"><b class="m" style="font-weight:500;">Payments</b></div></div>
+        </div>
+
+        <div class="sec"><b>Investments</b><a>Show more</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:#0E2A47;"><svg width="22" height="22" viewBox="0 0 22 22"><g fill="#4E8FD9"><circle cx="11" cy="11" r="2"/><circle cx="11" cy="5.5" r="1.4"/><circle cx="11" cy="16.5" r="1.4"/><circle cx="5.5" cy="11" r="1.4"/><circle cx="16.5" cy="11" r="1.4"/><circle cx="7.2" cy="7.2" r="1.2"/><circle cx="14.8" cy="7.2" r="1.2"/><circle cx="7.2" cy="14.8" r="1.2"/><circle cx="14.8" cy="14.8" r="1.2"/></g></svg></span><div class="rt"><b class="m">Tradeweb</b><span>TW / 0.98298127</span></div><div class="amt"><b>246.89$</b><span class="down">▼ 9.42 %</span></div></div>
+          <div class="row"><span class="av" style="background:#1D1D1F;"><svg width="22" height="22" viewBox="0 0 22 22"><g fill="#E4574B"><circle cx="11" cy="11" r="2.1"/><circle cx="11" cy="5.2" r="1.3"/><circle cx="11" cy="16.8" r="1.3"/><circle cx="5.2" cy="11" r="1.3"/><circle cx="16.8" cy="11" r="1.3"/><circle cx="6.9" cy="6.9" r="1.1"/><circle cx="15.1" cy="6.9" r="1.1"/><circle cx="6.9" cy="15.1" r="1.1"/><circle cx="15.1" cy="15.1" r="1.1"/></g></svg></span><div class="rt"><b class="m">Trendlines Group</b><span>SGX / 0.98298127</span></div><div class="amt"><b>720.45$</b><span class="down">▼ 0.12 %</span></div></div>
+          <div class="row"><span class="av" style="background:#E82127;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 5.6 8.2 4c1.1-.9 2.4-1.4 3.8-1.4S14.7 3.1 15.8 4L12 5.6Zm0 0 4.6-1.9c1 .5 1.9 1.2 2.6 2.1l-6 2.5-1.2 13-1.2-13-6-2.5c.7-.9 1.6-1.6 2.6-2.1L12 5.6Z"/></svg></span><div class="rt"><b class="m">Tesla</b><span>TSLA / 0.98298127</span></div><div class="amt"><b>2304.55$</b><span class="up">▲ 12.39 %</span></div></div>
+        </div>
+
+        <div class="sec"><b>Cryptocurrencies</b><a>Show more</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:#EF0027;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M3 3l18 4.5L12.5 21 3 3Zm3.4 3 5.8 11 5.4-9-11.2-2Z"/></svg></span><div class="rt"><b class="m">TRON</b><span>TRX / 0.98298127</span></div><div class="amt"><b>2304.55$</b><span class="up">▲ 12.39 %</span></div></div>
+          <div class="row"><span class="av" style="background:#0098EA;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 5h16l-8 15L4 5Z" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M12 5v13" stroke="#fff" stroke-width="2.2"/></svg></span><div class="rt"><b class="m">TONCOIN</b><span>TON / 0.98298127</span></div><div class="amt"><b>246.89$</b><span class="down">▼ 9.42 %</span></div></div>
+          <div class="row"><span class="av" style="background:#50AF95;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M4 4h16v4h-6v2.1c3.5.2 6 .9 6 1.9s-2.5 1.7-6 1.9V20h-4v-6.1c-3.5-.2-6-.9-6-1.9s2.5-1.7 6-1.9V8H4V4Zm8 7c-2.9 0-5.1.4-5.1 1s2.2 1 5.1 1 5.1-.4 5.1-1-2.2-1-5.1-1Z"/></svg></span><div class="rt"><b class="m">THEDER</b><span>USDT / 0.98298127</span></div><div class="amt"><b>720.45$</b><span class="down">▼ 0.12 %</span></div></div>
+        </div>
+
+        <div class="sec"><b>Help on the topic</b><a>See all</a></div>
+        <div class="group">
+          <div class="help-row">Sending money from TBC bank to other Georgian bank<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">What are bank transfer fees?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">What are the transfer timeframes?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+        </div>
+      </div>
+
+      <!-- ===== CARD ===== -->
+      <div class="panel" id="panel-card">
+        <div class="sec"><b>Quick actions</b></div>
+        <div class="group">
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="2.5" y="5" width="17" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M6 13.5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><div class="rt"><b class="m">Card details</b><span class="m">View your card details</span></div></div>
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="2.5" y="6" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M2.5 9.5h14" stroke="currentColor" stroke-width="1.7"/><circle cx="17" cy="15" r="4" fill="#F1F4F6" stroke="currentColor" stroke-width="1.5"/><path d="m14.8 12.8 4.4 4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span><div class="rt"><b class="m">Block card</b><span class="m">Block your card temporarily or permanently</span></div></div>
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="4.5" y="9" width="13" height="9.5" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M7.5 9V6.8a3.5 3.5 0 0 1 7 0V9" stroke="currentColor" stroke-width="1.7"/><circle cx="11" cy="13.7" r="1.4" fill="currentColor"/></svg></span><div class="rt"><b class="m">Change PIN</b><span class="m">Change the PIN code on your card</span></div></div>
+        </div>
+
+        <div class="sec"><b>My cards</b></div>
+        <div class="group">
+          <div class="row"><span class="av" style="width:52px;height:36px;border-radius:6px;background:linear-gradient(135deg,#1B2B4B,#0E1830);"><svg width="52" height="36" viewBox="0 0 52 36"><text x="7" y="12" font-size="6" fill="#8FA2C4" font-family="inherit">▲ concept</text><rect x="7" y="20" width="10" height="7" rx="1.5" fill="#C7D2E6" opacity=".8"/></svg></span><div class="rt"><b class="m">Concept 360</b><span>**** 4169</span></div></div>
+          <div class="row"><span class="av" style="width:52px;height:36px;border-radius:6px;background:linear-gradient(135deg,#C9D6E2,#9FB2C4);"><svg width="52" height="36" viewBox="0 0 52 36"><text x="7" y="12" font-size="6" fill="#5D7186" font-family="inherit">▲ concept</text><text x="7" y="28" font-size="7" font-weight="700" fill="#41546A" font-family="inherit">VISA</text></svg></span><div class="rt"><b class="m">Visa Platinum</b><span>**** 6635</span></div></div>
+          <div class="row"><span class="av" style="width:52px;height:36px;border-radius:6px;background:linear-gradient(135deg,#F6D33C,#F0B429);"><svg width="52" height="36" viewBox="0 0 52 36"><path d="M22 12l6-4 6 4-2 8h-8l-2-8Z" fill="#1D6FE0"/><path d="M26 10l4 8h-8l4-8Z" fill="#FFD400" opacity=".9"/><text x="7" y="30" font-size="6.5" font-weight="700" fill="#2A3540" font-family="inherit">VISA</text></svg></span><div class="rt"><b class="m">Ertguli</b><span>**** 9866</span></div></div>
+        </div>
+
+        <div class="sec"><b>Products</b><a>Show more</a></div>
+        <div class="group">
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M4 13.5 5.5 8.6A2 2 0 0 1 7.4 7.2h7.2a2 2 0 0 1 1.9 1.4L18 13.5M4 13.5h14M4 13.5v3.3h2.2v-1.4h9.6v1.4H18v-3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="rt"><b class="m" style="font-weight:500;">Autocomfort</b></div></div>
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="2.5" y="6" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 9.5h14" stroke="currentColor" stroke-width="1.6"/><circle cx="16.5" cy="14.5" r="4.2" fill="#F1F4F6" stroke="currentColor" stroke-width="1.5"/><path d="M16.5 12.6v3.8M14.6 14.5h3.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span><div class="rt"><b class="m" style="font-weight:500;">Credit card</b></div></div>
+        </div>
+
+        <div class="sec"><b>Transactions</b><a>See all</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:linear-gradient(135deg,#6E5B4E,#41352C);">CR<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Carlos Rivera</b><span>13 Aug, 12:45</span></div><div class="amt"><b>130.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:#9B5BE0;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="5" y="5" width="12" height="12" rx="2.5" stroke="#fff" stroke-width="1.7"/><circle cx="11" cy="11" r="2.6" stroke="#fff" stroke-width="1.7"/></svg><span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Credit card</b><span>9 Aug, 13:00</span></div><div class="amt"><b>230.59₾</b></div></div>
+          <div class="row"><span class="av" style="background:#17B26A;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M4.5 13 6 8.8A1.8 1.8 0 0 1 7.7 7.5h6.6A1.8 1.8 0 0 1 16 8.8L17.5 13M4.5 13h13M4.5 13v3h2v-1.3h9V16h2v-3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="rt"><b class="m">Autocomfort</b><span>25 Aug, 15:30</span></div><div class="amt"><b>134.15₾</b></div></div>
+        </div>
+
+        <div class="sec"><b>Payments</b><a>See all</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:#111;font-size:8px;letter-spacing:.5px;">SOCAR</span><div class="rt"><b class="m">Socar Georgia</b><span>ID: 3573584</span></div><div class="amt"><b class="neg">25.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:#0B2A8A;"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" fill="#0B2A8A"/><path d="M7 11c1.6-3.4 6.4-3.4 8 0-1.6 3.4-6.4 3.4-8 0Z" fill="#3FB6E8"/><circle cx="11" cy="11" r="1.7" fill="#fff"/></svg></span><div class="rt"><b class="m">Silknet</b><span>ID: 3573584</span></div><div class="amt"><b class="neg">85.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:#111;font-size:6.5px;line-height:1;text-align:center;">USA2<br>GEORGIA</span><div class="rt"><b class="m">USA2Georgia</b><span>ID: 3573584</span></div><div class="amt"><b>0.00₾</b></div></div>
+        </div>
+
+        <div class="sec"><b>Help on the topic</b><a>See all</a></div>
+        <div class="group">
+          <div class="help-row">Payment card was declined<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">What are the credit card limits?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">What are the transfer timeframes?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+        </div>
+      </div>
+
+      <!-- ===== GIO (user) ===== -->
+      <div class="panel" id="panel-user">
+        <div class="hero">
+          <div class="who">
+            <span class="av">GM</span>
+            <div><b class="m">Giorgi Mikeladze</b><span>+995 599 704 230</span></div>
+          </div>
+          <div class="big">0.00 ₾</div>
+          <button class="btn-primary">Transfer</button>
+        </div>
+
+        <div class="sec"><b>Recipients</b><a>Show more</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:#EFE9FB;color:#8B7AC1;">GM</span><div class="rt"><b class="m">Giorgi Mikeladze</b><span>+995 599 704 230</span></div></div>
+          <div class="row"><span class="av" style="background:#E2F6EC;color:#2BA46B;">NG</span><div class="rt"><b class="m">Nino Giorgadze</b><span>GE05TB****0128 ₾</span></div></div>
+          <div class="row"><span class="av" style="background:linear-gradient(135deg,#C9CFD6,#8F9AA5);">KG</span><div class="rt"><b class="m">Keti Gilauri</b><span>+995 599 310 452</span></div></div>
+        </div>
+
+        <div class="sec"><b>Transactions</b><a>See all</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:#D9DEF3;color:#6C79B8;">GS<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Giovani Santos</b><span>13 Aug, 12:45</span></div><div class="amt"><b>45.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:linear-gradient(135deg,#B8927A,#7E6350);">GD<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Gigi Danelia</b><span>13 Aug, 12:45</span></div><div class="amt"><b>130.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:#E2F6EC;color:#2BA46B;">GM<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Guram Machavariani</b><span>13 Aug, 12:45</span></div><div class="amt"><b>240.94₾</b></div></div>
+        </div>
+
+        <div class="sec"><b>Payments</b><a>See all</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:#111;font-size:6.5px;line-height:1;text-align:center;">USA2<br>GEORGIA</span><div class="rt"><b class="m">USA2Georgia</b><span>ID: 3573584</span></div><div class="amt"><b>0.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:#111;font-size:8px;letter-spacing:.5px;">SOCAR</span><div class="rt"><b class="m">Socar Georgia</b><span>ID: 3573584</span></div><div class="amt"><b class="neg">25.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:#0B2A8A;"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" fill="#0B2A8A"/><path d="M7 11c1.6-3.4 6.4-3.4 8 0-1.6 3.4-6.4 3.4-8 0Z" fill="#3FB6E8"/><circle cx="11" cy="11" r="1.7" fill="#fff"/></svg></span><div class="rt"><b class="m">Silknet</b><span>ID: 3573584</span></div><div class="amt"><b class="neg">85.00₾</b></div></div>
+        </div>
+
+        <div class="sec"><b>Help on the topic</b><a>See all</a></div>
+        <div class="group">
+          <div class="help-row">Sending money from TBC bank to other Georgian bank<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">What are bank transfer fees?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">What are the transfer timeframes?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+        </div>
+      </div>
+
+      <!-- ===== EXCHANGE ===== -->
+      <div class="panel" id="panel-exch">
+        <div class="hero" style="margin-top:8px;">
+          <div class="fx-box">
+            <div class="fx-line">
+              <div class="l"><span class="lab">Sell</span><span class="val" id="fx-sell">256,335.05</span></div>
+              <span class="fx-cur" id="cur-sell"><span class="flag">🇬🇪</span>GEL <svg width="11" height="7" viewBox="0 0 12 7" fill="none"><path d="M1 1l5 5 5-5" stroke="#00A3E0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </div>
+            <div class="fx-div"></div>
+            <div class="fx-line">
+              <div class="l"><span class="lab">Buy</span><span class="val" id="fx-buy">95,000<span class="caret" style="height:24px;margin-left:2px;"></span></span></div>
+              <span class="fx-cur" id="cur-buy"><span class="flag">🇺🇸</span>USD <svg width="11" height="7" viewBox="0 0 12 7" fill="none"><path d="M1 1l5 5 5-5" stroke="#00A3E0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </div>
+            <button class="fx-swap" id="fx-swap" aria-label="Swap currencies"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M5 2v10M5 12 2.5 9.5M5 12l2.5-2.5M11 14V4M11 4 8.5 6.5M11 4l2.5 2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <button class="btn-primary" style="margin-top:14px;">Review Exchange</button>
+        </div>
+
+        <div class="sec"><b>Account currencies</b></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:#fff;font-size:24px;border:1px solid var(--line);">🇺🇸</span><div class="rt"><b>US Dollar</b><span>USD</span></div><button class="pill-blue">Exchange</button></div>
+          <div class="row"><span class="av" style="background:#fff;font-size:24px;border:1px solid var(--line);">🇪🇺</span><div class="rt"><b>Europien Euro</b><span>EUR</span></div><button class="pill-blue">Exchange</button></div>
+          <div class="row"><span class="av" style="background:#fff;font-size:24px;border:1px solid var(--line);">🇬🇧</span><div class="rt"><b>British Pound</b><span>GBP</span></div><button class="pill-blue">Exchange</button></div>
+        </div>
+
+        <div class="sec"><b>Quick actions</b></div>
+        <div class="group">
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M17.5 8A7 7 0 0 0 5 6.5M4.5 14a7 7 0 0 0 12.5 1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 2.5v4h4M17 19.5v-4h-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><text x="11" y="13.4" text-anchor="middle" font-size="7.5" font-weight="700" fill="currentColor" font-family="inherit">₾</text></svg></span><div class="rt"><b class="m">Exchange</b><span>Convert currencies</span></div></div>
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M4 8h13l-3-3M18 14H5l3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="rt"><b class="m">Between my accounts</b><span>Transfer money to you account</span></div></div>
+        </div>
+
+        <div class="sec"><b>Transactions</b><a>Show more</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:none;font-size:0;"><span style="position:absolute;left:0;top:0;font-size:26px;">🇺🇸</span><span style="position:absolute;right:-3px;bottom:-3px;font-size:19px;">🇬🇪</span></span><div class="rt"><b>USD → GEL</b><span>13 Aug, 12:45</span></div><div class="amt"><b style="color:var(--green);">+260.00₾</b><span class="sub">-100.00$</span></div></div>
+          <div class="row"><span class="av" style="background:none;font-size:0;"><span style="position:absolute;left:0;top:0;font-size:26px;">🇬🇪</span><span style="position:absolute;right:-3px;bottom:-3px;font-size:19px;">🇬🇧</span></span><div class="rt"><b>GEL → GBP</b><span>13 Aug, 12:45</span></div><div class="amt"><b style="color:var(--green);">+100.00£</b><span class="sub">-350.00₾</span></div></div>
+          <div class="row"><span class="av" style="background:none;font-size:0;"><span style="position:absolute;left:0;top:0;font-size:26px;">🇬🇪</span><span style="position:absolute;right:-3px;bottom:-3px;font-size:19px;">🇪🇺</span></span><div class="rt"><b>GEL → EUR</b><span>13 Aug, 12:45</span></div><div class="amt"><b style="color:var(--green);">+150.00€</b><span class="sub">-450.00₾</span></div></div>
+        </div>
+
+        <div class="sec"><b>Help on the topic</b><a>See all</a></div>
+        <div class="group">
+          <div class="help-row">How to exchange currency in TBC app<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">What are the exchange rates?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">What are the exchange fees?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+        </div>
+      </div>
+
+      <!-- ===== ATM ===== -->
+      <div class="panel" id="panel-atm">
+        <div class="sec"><b>Products</b></div>
+        <div class="group">
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M11 19s6-5.1 6-9.6A6 6 0 0 0 5 9.4C5 13.9 11 19 11 19Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="11" cy="9.3" r="2.2" stroke="currentColor" stroke-width="1.7"/></svg></span><div class="rt"><b class="m">ATM</b><span>TBC ATM locations</span></div></div>
+        </div>
+
+        <div class="sec"><b>Transactions</b><a>See all</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:#9B5BE0;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="5" y="5" width="12" height="12" rx="2.5" stroke="#fff" stroke-width="1.7"/><circle cx="11" cy="11" r="2.6" stroke="#fff" stroke-width="1.7"/></svg></span><div class="rt"><b class="m">ATM withdrawal</b><span>9 Aug, 13:00</span></div><div class="amt"><b>230.59₾</b></div></div>
+          <div class="row"><span class="av" style="background:#17B26A;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M4.5 13 6 8.8A1.8 1.8 0 0 1 7.7 7.5h6.6A1.8 1.8 0 0 1 16 8.8L17.5 13M4.5 13h13M4.5 13v3h2v-1.3h9V16h2v-3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="rt"><b class="m">Autocomfort</b><span>25 Aug, 15:30</span></div><div class="amt"><b>134.15₾</b></div></div>
+          <div class="row"><span class="av" style="background:#EAF2FB;color:#5B87C5;">AB<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Anano Beridze</b><span>13 Aug, 12:45</span></div><div class="amt"><b>130.00₾</b></div></div>
+        </div>
+
+        <div class="sec"><b>Help on the topic</b><a>See all</a></div>
+        <div class="group">
+          <div class="help-row">How to find ATMs near me?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">What are the ATM withdrawal limits?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">What are the ATM fees?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+        </div>
+      </div>
+
+      <!-- ===== DEPOSIT ===== -->
+      <div class="panel" id="panel-depo">
+        <div class="sec"><b>Products</b><a>Show more</a></div>
+        <div class="group">
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="3" y="4" width="16" height="14" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M11 8v5M8.8 10.8 11 13l2.2-2.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="rt"><b class="m">Term Deposit</b><span class="m">Choose when to receive our high interest</span></div></div>
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><ellipse cx="11" cy="12" rx="7.5" ry="6" stroke="currentColor" stroke-width="1.7"/><path d="M18 10.5h2v3h-2M8 5.5c1.8-1 4.2-1 6 0M6.5 17.5v1.8M15.5 17.5v1.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 11.5h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><div class="rt"><b class="m">My Goal</b><span class="m">Open a deposit for 3 to 24 months</span></div></div>
+          <div class="row qa"><span class="av soft"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="3" y="4" width="16" height="14" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M11 8.5v5M8.5 11h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6.5 18v1.5M15.5 18v1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><div class="rt"><b class="m">My Safe</b><span class="m">Open a deposit with flexible terms</span></div></div>
+        </div>
+
+        <div class="sec"><b>Transactions</b><a>See all</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:var(--chip);color:var(--blue);"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="3.5" y="4.5" width="15" height="13" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M11 8.5v5M8.5 11h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><div class="rt"><b class="m">My Safe</b><span>25 Aug, 10:00</span></div><div class="amt"><b>150.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:var(--chip);color:var(--blue);"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="3.5" y="4.5" width="15" height="13" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M11 8.5v5M8.5 11h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><div class="rt"><b class="m">My Safe</b><span>25 Jul, 10:00</span></div><div class="amt"><b>150.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:var(--chip);color:var(--blue);"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="3.5" y="4.5" width="15" height="13" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M11 8.5v5M8.5 11h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><div class="rt"><b class="m">My Safe</b><span>25 Jun, 10:00</span></div><div class="amt"><b>150.00₾</b></div></div>
+        </div>
+
+        <div class="sec"><b>Help on the topic</b><a>See all</a></div>
+        <div class="group">
+          <div class="help-row">How do I deposit a check?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">What are the deposit limits?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">How long do deposits take to process?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+        </div>
+      </div>
+
+      <!-- ===== STOCK (Nik) ===== -->
+      <div class="panel" id="panel-stock">
+        <div class="hero stock-hero" style="margin-top:8px;">
+          <div class="co"><span class="lg"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M22 7.2 7.6 13.3c-1.9.8-3.4 1-4.3.4-1-.7-.9-2.2.3-3.9.7-1 1.7-2 2.8-2.8-.3.5-1.5 2.7-.1 3.5.7.4 1.8.3 3.2-.3L22 7.2Z"/></svg></span><span class="m">Nike</span></div>
+          <div class="stock-grid">
+            <div class="stock-num">
+              <div class="p">12,000<small>.00$</small></div>
+              <div class="wk">Week: + 8.97 $ <span class="up">▲ 2.05 %</span></div>
+            </div>
+            <svg width="132" height="72" viewBox="0 0 132 72" fill="none">
+              <defs><linearGradient id="nkg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FD4F5" stop-opacity=".55"/><stop offset="1" stop-color="#7FD4F5" stop-opacity="0"/></linearGradient></defs>
+              <path d="M2 58C18 50 26 60 40 54 54 48 60 30 76 30c14 0 18 12 30 6 10-5 14-18 20-24" stroke="#2CB4E8" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+              <path d="M2 58C18 50 26 60 40 54 54 48 60 30 76 30c14 0 18 12 30 6 10-5 14-18 20-24V72H2V58Z" fill="url(#nkg)"/>
+              <circle cx="126" cy="12" r="4.5" fill="#2CB4E8" stroke="#fff" stroke-width="2.4"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="sec"><b>Investments</b><a>Show more</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:#E82127;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 5.6 8.2 4c1.1-.9 2.4-1.4 3.8-1.4S14.7 3.1 15.8 4L12 5.6Zm0 0 4.6-1.9c1 .5 1.9 1.2 2.6 2.1l-6 2.5-1.2 13-1.2-13-6-2.5c.7-.9 1.6-1.6 2.6-2.1L12 5.6Z"/></svg></span><div class="rt"><b class="m">Tesla</b><span>TSLA / 0.98298127</span></div><div class="amt"><b>2304.55$</b><span class="up">▲ 12.39 %</span></div></div>
+          <div class="row"><span class="av" style="background:#111;"><svg width="17" height="20" viewBox="0 0 24 28" fill="#fff"><path d="M19.5 14.8c0-3 2.5-4.5 2.6-4.6-1.4-2.1-3.6-2.4-4.4-2.4-1.9-.2-3.7 1.1-4.6 1.1-1 0-2.4-1.1-4-1-2 0-3.9 1.2-5 3-2.1 3.7-.5 9.2 1.5 12.2 1 1.5 2.2 3.1 3.8 3 1.5-.1 2.1-1 4-1s2.4 1 4 1 2.7-1.5 3.7-3c1.2-1.7 1.6-3.3 1.7-3.4-.1 0-3.2-1.2-3.3-4.9ZM16.4 5.6c.8-1 1.4-2.4 1.2-3.9-1.2.1-2.7.8-3.6 1.9-.8.9-1.5 2.4-1.3 3.8 1.4.1 2.8-.7 3.7-1.8Z"/></svg></span><div class="rt"><b class="m">Apple</b><span>AAPL / 0.98298127</span></div><div class="amt"><b>246.89$</b><span class="down">▼ 9.42 %</span></div></div>
+          <div class="row"><span class="av" style="background:#EAF0FB;"><svg width="22" height="14" viewBox="0 0 30 18" fill="none"><path d="M2 16C4 8 6.5 2 9.5 2c3.4 0 5 7.6 8 7.6S22.6 2 25 2c2 0 3 3.6 3 6.5 0 4-1.5 7.5-3.6 7.5-2.8 0-4-7.6-6.9-7.6s-4 7.6-7 7.6C6.6 16 4.6 14 2 16Z" stroke="#1877F2" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="rt"><b class="m">Meta</b><span>META / 0.98298127</span></div><div class="amt"><b>720.45$</b><span class="down">▼ 0.12 %</span></div></div>
+        </div>
+
+        <div class="sec"><b>Transactions</b><a>See all</a></div>
+        <div class="group">
+          <div class="row"><span class="av" style="background:linear-gradient(135deg,#E8CF9E,#C6A369);">NJ<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Nikolas Johnson</b><span>13 Aug, 12:45</span></div><div class="amt"><b>50.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:linear-gradient(135deg,#C9CFD6,#8F9AA5);">NG<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Nino Giorgadze</b><span>13 Aug, 12:45</span></div><div class="amt"><b>130.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:#DFF2EE;color:#2BA48F;">ND<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Nathan Drake</b><span>13 Aug, 12:45</span></div><div class="amt"><b>270.00₾</b></div></div>
+        </div>
+
+        <div class="sec"><b>Help on the topic</b><a>See all</a></div>
+        <div class="group">
+          <div class="help-row">How to start investing in stocks?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">What are stock market dividends?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="help-row">How to read a stock chart?<span class="chev"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+        </div>
+      </div>
+
+      <!-- ===== EMPTY ===== -->
+      <div class="panel" id="panel-empty">
+        <div class="empty-state">
+          <div class="big">🔍</div>
+          <b>No results for “<span id="empty-q"></span>”</b>
+          Try searching for a product, transaction, or contact
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== Keyboard ===== -->
+    <div class="kb" id="kb">
+      <div class="kb-sugg"><div>“The”</div><div>the</div><div>to</div></div>
+      <div class="kb-row"><button class="key">q</button><button class="key">w</button><button class="key">e</button><button class="key">r</button><button class="key">t</button><button class="key">y</button><button class="key">u</button><button class="key">i</button><button class="key">o</button><button class="key">p</button></div>
+      <div class="kb-row r2"><button class="key">a</button><button class="key">s</button><button class="key">d</button><button class="key">f</button><button class="key">g</button><button class="key">h</button><button class="key">j</button><button class="key">k</button><button class="key">l</button></div>
+      <div class="kb-row"><button class="key fn" id="k-shift"><svg width="18" height="17" viewBox="0 0 20 18" fill="none"><path d="M10 1 2 10h4.5v7h7v-7H18L10 1Z" stroke="#111" stroke-width="1.6" stroke-linejoin="round" fill="#fff"/></svg></button><button class="key">z</button><button class="key">x</button><button class="key">c</button><button class="key">v</button><button class="key">b</button><button class="key">n</button><button class="key">m</button><button class="key fn" id="k-back"><svg width="22" height="16" viewBox="0 0 24 17" fill="none"><path d="M8 1h13a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8L1 8.5 8 1Z" stroke="#111" stroke-width="1.5" stroke-linejoin="round" fill="#fff"/><path d="m11 5.5 6 6M17 5.5l-6 6" stroke="#111" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+      <div class="kb-last"><button class="key123">123</button><button class="space" id="k-space"></button><button class="ret" id="k-ret">⏎</button></div>
+      <div class="kb-foot"><span>☺</span><span><svg width="15" height="21" viewBox="0 0 16 22" fill="none"><rect x="5" y="1.5" width="6" height="11" rx="3" stroke="#4A5058" stroke-width="1.7"/><path d="M2.5 9.5a5.5 5.5 0 0 0 11 0M8 15v4M5 19.5h6" stroke="#4A5058" stroke-width="1.7" stroke-linecap="round"/></svg></span></div>
+    </div>
+  </div>
+
+<!-- ================= NOTIFICATIONS ================= -->
+  <div id="screen-notif" class="screen hidden">
+    <div class="notif-head">
+      <button class="back-btn" id="close-notif" aria-label="Back"><svg width="21" height="18" viewBox="0 0 22 18" fill="none"><path d="M9.5 2 2.5 9l7 7M3 9h17" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <h1>Notifications</h1>
+      <button class="icon-plain" aria-label="Search notifications"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.2" stroke="currentColor" stroke-width="1.9"/><path d="m13.8 13.8 4 4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></button>
+      <button class="icon-plain" aria-label="Notification settings"><svg width="21" height="21" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="2.6" stroke="currentColor" stroke-width="1.7"/><path d="M11 3.2 12 5.4l2.4-.7 1 2.2 2.4.6-.6 2.4 1.7 1.9-1.7 1.8.6 2.4-2.4.6-1 2.2-2.4-.7-1 2.1-1-2.1-2.4.7-1-2.2-2.4-.6.6-2.4L2.5 11l1.7-1.9-.6-2.4 2.4-.6 1-2.2 2.4.7 1-2.1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div class="chips" id="notif-chips">
+      <button class="chip-f on" data-f="all">All</button>
+      <button class="chip-f" data-f="action">Action required</button>
+      <button class="chip-f" data-f="offer">Offers</button>
+      <button class="chip-f" data-f="money">Money and transfers</button>
+    </div>
+    <div class="notif-scroll" id="notif-scroll">
+      <div class="day-h" data-day>Today</div>
+      <div class="ncard unread" data-cat="action money">
+          <span class="nic" style="background:#F0C33C;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M11 3a5.2 5.2 0 0 0-3 9.4c.6.5 1 1.1 1 1.8v.3h4v-.3c0-.7.4-1.3 1-1.8A5.2 5.2 0 0 0 11 3Z" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/><path d="M9.3 17h3.4M10 19.3h2" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">Upcoming bill reminder</span><span class="ntime">5m</span></div>
+            <div class="nsub">109.00 GEL, Tbilisi Energy, ID:1312663908</div><div class="n-actions"><button class="n-btn">Pay Bill</button></div>
+          </div>
+        </div>
+      <div class="ncard" data-cat="offer">
+          <span class="nic" style="background:#9B5BE0;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="3.5" y="6" width="15" height="10" rx="2" stroke="#fff" stroke-width="1.6"/><circle cx="11" cy="11" r="2.2" stroke="#fff" stroke-width="1.6"/><path d="M6.3 8.6v.01M15.7 13.4v.01" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">Consumer loan</span><span class="ntime">9m</span></div>
+            <div class="n-body"><div class="txt"><span class="offer-tag">Offers for you</span><div class="nsub">Only on weekend, Loan with more discount</div><div class="n-actions"><button class="n-btn">Check Your Limit</button></div></div><span class="n-thumb"><svg width="88" height="74" viewBox="0 0 88 74"><rect width="88" height="74" fill="#C8B49B"/><rect y="46" width="88" height="28" fill="#8A6F55"/><rect x="8" y="40" width="72" height="18" rx="8" fill="#D8CDBB"/><circle cx="30" cy="30" r="9" fill="#B08968"/><circle cx="52" cy="28" r="9" fill="#8C5F43"/><rect x="22" y="38" width="18" height="14" rx="6" fill="#5E7A8A"/><rect x="44" y="36" width="18" height="16" rx="6" fill="#CC7777"/><circle cx="68" cy="18" r="10" fill="#7FA36B" opacity=".8"/></svg></span></div>
+          </div>
+        </div>
+      <div class="ncard" data-cat="action money">
+          <span class="nic" style="background:#F0C33C;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="7.2" stroke="#fff" stroke-width="1.7"/><text x="11" y="14.6" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" font-family="inherit">₾</text></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">Loan payment reminder</span><span class="ntime">12m</span></div>
+            <div class="nsub">109.00 GEL, Tbilisi Energy, ID:1312663908</div><div class="n-actions"><button class="n-btn">Pay Loan</button></div>
+          </div>
+        </div>
+      <div class="day-h" data-day>Yesterday</div>
+      <div class="ncard" data-cat="money">
+          <span class="nic" style="background:#2CA9E1;"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="M6 16v-4M11 16V7M16 16v-6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M4 19h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">Weekly summary is ready!</span><span class="ntime">09:45</span></div>
+            <div class="nsub">June 1-7, 2026</div><div class="n-actions"><button class="n-btn">See Summary</button></div>
+          </div>
+        </div>
+      <div class="ncard" data-cat="action">
+          <span class="nic" style="background:#F0C33C;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M11 3a5.2 5.2 0 0 0-3 9.4c.6.5 1 1.1 1 1.8v.3h4v-.3c0-.7.4-1.3 1-1.8A5.2 5.2 0 0 0 11 3Z" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/><path d="M9.3 17h3.4M10 19.3h2" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">KYC verification required</span><span class="ntime">09:45</span></div>
+            <div class="nsub">This is a KYC-related notification. Some features are currently unavailable because your KYC is incomplete.</div><div class="n-actions"><button class="n-btn">Update KYC</button></div>
+          </div>
+        </div>
+      <div class="ncard" data-cat="money">
+          <span class="nic line"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="m7.5 11 2.3 2.3L14.7 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">Credit card activated</span><span class="ntime">09:45</span></div>
+            <div class="nsub">Your credit card is now active. You can start making purchases immediately.</div>
+          </div>
+        </div>
+      <div class="ncard" data-cat="info">
+          <span class="nic line"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="2.6" stroke="currentColor" stroke-width="1.5"/><path d="M11 3.2 12 5.4l2.4-.7 1 2.2 2.4.6-.6 2.4 1.7 1.9-1.7 1.8.6 2.4-2.4.6-1 2.2-2.4-.7-1 2.1-1-2.1-2.4.7-1-2.2-2.4-.6.6-2.4L2.5 11l1.7-1.9-.6-2.4 2.4-.6 1-2.2 2.4.7 1-2.1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">System maintenance</span><span class="ntime">09:45</span></div>
+            <div class="nsub">Tonight from 02:00&ndash;04:00. Some services may be temporarily unavailable</div>
+          </div>
+        </div>
+      <div class="ncard" data-cat="offer">
+          <span class="nic" style="background:#9B5BE0;"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="M11 17.5S4.5 13.7 4.5 9.2A3.5 3.5 0 0 1 11 7.4a3.5 3.5 0 0 1 6.5 1.8c0 4.5-6.5 8.3-6.5 8.3Z" fill="#fff"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">Quick Balance&nbsp; View</span><span class="ntime">09:45</span></div>
+            <div class="n-body"><div class="txt"><span class="offer-tag">Offers for you</span><div class="nsub">You often check your balance, try enabling quick balance view on your home&hellip;</div></div><span class="n-thumb"><svg width="88" height="74" viewBox="0 0 88 74"><rect width="88" height="74" fill="#8A2BE2"/><circle cx="44" cy="30" r="13" fill="#C99B76"/><path d="M31 30c0-14 26-14 26 0v10H31V30Z" fill="#3A2A20"/><rect x="28" y="44" width="32" height="30" rx="10" fill="#F2F2F2"/><rect x="46" y="30" width="14" height="20" rx="3" transform="rotate(18 46 30)" fill="#B98BEF" stroke="#fff" stroke-width="1.5"/></svg></span></div>
+          </div>
+        </div>
+      <div class="ncard" data-cat="info">
+          <span class="nic" style="background:#E85BB4;"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="m5 17 3.2-8.5L14 14 5 17Z" fill="#fff"/><path d="M13 8.5c1.2-1.2 3-1.4 4.5-.6M11.5 5.5c.2-1.2 1-2.1 2.2-2.5M15.5 12c1 .2 1.8.8 2.3 1.7" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/><circle cx="16.5" cy="4.5" r="1" fill="#fff"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">Dear Mariam, Happy Birthday!</span><span class="ntime">09:45</span></div>
+            <div class="nsub">May the year ahead bring you health, happiness and continued success</div>
+          </div>
+        </div>
+      <div class="day-h" data-day>30 June</div>
+      <div class="ncard" data-cat="offer">
+          <span class="nic" style="background:#9B5BE0;"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="M11 17.5S4.5 13.7 4.5 9.2A3.5 3.5 0 0 1 11 7.4a3.5 3.5 0 0 1 6.5 1.8c0 4.5-6.5 8.3-6.5 8.3Z" fill="#fff"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">Concept Airport Lounge</span><span class="ntime">09:45</span></div>
+            <div class="n-body"><div class="txt"><span class="offer-tag">Offers for you</span><div class="nsub">Get away from terminal crowds and enjoy comfortable seating in a co&hellip;</div><div class="n-actions"><button class="n-btn">Explore More</button></div></div><span class="n-thumb"><svg width="88" height="74" viewBox="0 0 88 74"><rect width="88" height="74" fill="#3E5E70"/><rect y="50" width="88" height="24" fill="#2C4452"/><rect x="10" y="30" width="42" height="24" rx="6" fill="#D9DFE4"/><rect x="14" y="22" width="34" height="12" rx="5" fill="#B9C4CC"/><circle cx="68" cy="26" r="12" fill="#7FB2C9" opacity=".85"/><rect x="58" y="44" width="22" height="12" rx="4" fill="#C7A46A"/></svg></span></div>
+          </div>
+        </div>
+      <div class="ncard" data-cat="action">
+          <span class="nic" style="background:#F0C33C;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M11 4 19 18H3L11 4Z" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/><path d="M11 9.5v3.7M11 15.6v.01" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">New sign-in detected</span><span class="ntime">09:45</span></div>
+            <div class="nsub">Your account was just accessed from a new device in Tbilisi, Georgia.</div><div class="n-actions"><button class="n-btn">Yes, It's Me</button><button class="n-link">No, Don't Allow</button></div>
+          </div>
+        </div>
+      <div class="ncard" data-cat="info">
+          <span class="nic" style="background:#F0C33C;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M11 4 19 18H3L11 4Z" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/><path d="M11 9.5v3.7M11 15.6v.01" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">New sign-in detected</span><span class="ntime">09:45</span></div>
+            <div class="nsub">Your account was just accessed from a new device in Tbilisi, Georgia.</div><div class="n-confirmed">You confirmed it was you</div>
+          </div>
+        </div>
+      <div class="ncard" data-cat="info">
+          <span class="nic" style="background:#F0C33C;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M11 4 19 18H3L11 4Z" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/><path d="M11 9.5v3.7M11 15.6v.01" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">New sign-in detected</span><span class="ntime">09:45</span></div>
+            <div class="nsub">Your account was just accessed from a new device in Tbilisi, Georgia.</div><div class="n-declined">Authorization declined</div>
+          </div>
+        </div>
+      <div class="ncard" data-cat="info">
+          <span class="nic line"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><rect x="3.5" y="5" width="15" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 9h15M7.5 3v3.5M14.5 3v3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7 12.5h2M13 12.5h2M7 15.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">Holiday banking hours</span><span class="ntime">09:45</span></div>
+            <div class="nsub">Due to the public holiday, branch operating hours will be adjusted on June 19, 2026. Check details in the app.</div>
+          </div>
+        </div>
+      <div class="ncard" data-cat="action">
+          <span class="nic line"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="M11 2.8 18 6.9v8.2L11 19.2 4 15.1V6.9L11 2.8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M11 8v5M8.8 10.8 11 13l2.2-2.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">App update available</span><span class="ntime">09:45</span></div>
+            <div class="nsub">A new version of the app is available. Update now to access the latest features and improvements.</div><div class="n-actions"><button class="n-btn">Update App</button></div>
+          </div>
+        </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+  <script>
+(function(){
+  const home    = document.getElementById('screen-home');
+  const search  = document.getElementById('screen-search');
+  const qRender = document.getElementById('q-render');
+  const box     = document.getElementById('search-box');
+  const scroll  = document.getElementById('search-scroll');
+  const emptyQ  = document.getElementById('empty-q');
+
+  const panels = {
+    start:'panel-start', trans:'panel-trans', card:'panel-card', user:'panel-user',
+    exch:'panel-exch', atm:'panel-atm', depo:'panel-depo', stock:'panel-stock', empty:'panel-empty'
+  };
+
+  // ---- state ----
+  let q = '';
+  let searchOpen = false;
+
+  // Save original text of every highlightable node once
+  document.querySelectorAll('.m').forEach(el => { el.dataset.t = el.textContent; });
+
+  // ---- routing: which panel does a query resolve to? ----
+  function resolve(query){
+    const s = query.trim().toLowerCase();
+    if(s.length < 2) return 'start';
+    const pre = (kw, min=2) => s.length >= min && kw.startsWith(s) || s.startsWith(kw);
+    if(pre('exchange'))                    return 'exch';
+    if(pre('atm'))                         return 'atm';
+    if(pre('deposit') || pre('depost'))    return 'depo';
+    if(s.length >= 3 && ('nike'.startsWith(s) || s.startsWith('nik'))) return 'stock';
+    if(pre('transfer') || pre('transaction') || pre('pay') || pre('bills')) return 'trans';
+    if(pre('card') || pre('credit'))       return 'card';
+    if(pre('giorgi') || pre('gio') || pre('nino') || pre('keti') || pre('guram') || pre('gigi')) return 'user';
+    return 'empty';
+  }
+
+  // ---- rendering ----
+  function esc(str){ return str.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  function highlight(panelEl, query){
+    const s = query.trim().toLowerCase();
+    panelEl.querySelectorAll('.m').forEach(el => {
+      const t = el.dataset.t;
+      if(!s){ el.textContent = t; return; }
+      const i = t.toLowerCase().indexOf(s);
+      if(i === -1){ el.textContent = t; return; }
+      el.innerHTML = esc(t.slice(0,i)) + '<span class="hl">' + esc(t.slice(i, i+s.length)) + '</span>' + esc(t.slice(i+s.length));
+    });
+  }
+
+  function render(){
+    // input pill
+    if(q){
+      box.classList.add('has-q');
+      qRender.innerHTML = '<span class="txt">' + esc(q) + '</span><span class="caret"></span>';
+    } else {
+      box.classList.remove('has-q');
+      qRender.innerHTML = '<span class="caret"></span><span class="ph">Search anything</span>';
+    }
+    // panel
+    const key = resolve(q);
+    Object.values(panels).forEach(id => document.getElementById(id).classList.remove('active'));
+    const active = document.getElementById(panels[key]);
+    active.classList.add('active');
+    if(key === 'empty') emptyQ.textContent = q;
+    highlight(active, q);
+    scroll.scrollTop = 0;
+  }
+
+  function setQuery(next){ q = next; render(); }
+
+  // ---- open / close ----
+  function openSearch(preset){
+    searchOpen = true;
+    home.classList.add('hidden');
+    search.classList.remove('hidden');
+    setQuery(preset || '');
+    requestAnimationFrame(() => search.classList.add('kb-open'));
+  }
+  function closeSearch(){
+    searchOpen = false;
+    search.classList.remove('kb-open');
+    search.classList.add('hidden');
+    home.classList.remove('hidden');
+    q = '';
+  }
+
+  document.getElementById('open-search').addEventListener('click', () => openSearch());
+  document.getElementById('close-search').addEventListener('click', closeSearch);
+  document.getElementById('clear-q').addEventListener('click', e => { e.stopPropagation(); setQuery(''); });
+
+  // ---- recent searches ----
+  document.querySelectorAll('.recent').forEach(row => {
+    row.addEventListener('click', e => {
+      if(e.target.closest('.rm')){ row.remove(); return; }
+      setQuery(row.dataset.q);
+    });
+  });
+  document.getElementById('clear-all').addEventListener('click', () => {
+    document.querySelectorAll('#recent-list .recent').forEach(r => r.remove());
+  });
+
+  // ---- most used shortcuts ----
+  document.querySelectorAll('.mu').forEach(b => b.addEventListener('click', () => setQuery(b.dataset.q)));
+
+  // ---- on-screen keyboard ----
+  let shift = true; // sentence case: first letter capitalized like screenshots ("Trans")
+  document.querySelectorAll('.kb .key:not(.fn)').forEach(k => {
+    k.addEventListener('click', () => {
+      const ch = k.textContent.trim();
+      if(!ch) return;
+      setQuery(q + (shift ? ch.toUpperCase() : ch));
+      shift = false;
+    });
+  });
+  document.getElementById('k-shift').addEventListener('click', () => { shift = !shift; });
+  document.getElementById('k-back').addEventListener('click', () => {
+    setQuery(q.slice(0, -1));
+    if(!q) shift = true;
+  });
+  document.getElementById('k-space').addEventListener('click', () => setQuery(q + ' '));
+  document.getElementById('k-ret').addEventListener('click', () => {});
+  document.querySelectorAll('.kb-sugg div').forEach(d => d.addEventListener('click', () => {
+    const parts = q.split(' '); parts[parts.length-1] = d.textContent.replace(/[“”]/g,'');
+    setQuery(parts.join(' ') + ' ');
+  }));
+
+  // ---- hardware keyboard (desktop) ----
+  document.addEventListener('keydown', e => {
+    if(!searchOpen) return;
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    if(e.key === 'Escape'){ closeSearch(); return; }
+    if(e.key === 'Backspace'){ e.preventDefault(); setQuery(q.slice(0,-1)); return; }
+    if(e.key.length === 1 && /[a-zA-Z0-9 ]/.test(e.key)){
+      e.preventDefault();
+      setQuery(q + e.key);
+    }
+  });
+
+  // ---- exchange swap ----
+  const sellEl = document.getElementById('fx-sell');
+  const buyEl  = document.getElementById('fx-buy');
+  const curS   = document.getElementById('cur-sell');
+  const curB   = document.getElementById('cur-buy');
+  document.getElementById('fx-swap').addEventListener('click', () => {
+    const v = sellEl.textContent;
+    sellEl.textContent = buyEl.textContent.trim();
+    buyEl.innerHTML = v + '<span class="caret" style="height:24px;margin-left:2px;"></span>';
+    const a = curS.innerHTML; curS.innerHTML = curB.innerHTML; curB.innerHTML = a;
+  });
+})();
+</script>
+
+<script>
+(function(){
+  var home  = document.getElementById("screen-home");
+  var notif = document.getElementById("screen-notif");
+  var dot   = document.getElementById("bell-dot");
+
+  function openNotif(e){
+    if(e && e.cancelable) e.preventDefault();
+    home.classList.add("hidden");
+    notif.classList.remove("hidden");
+  }
+  function closeNotif(e){
+    if(e && e.cancelable) e.preventDefault();
+    notif.classList.add("hidden");
+    home.classList.remove("hidden");
+  }
+  var bell = document.getElementById("open-notif");
+  var back = document.getElementById("close-notif");
+  bell.addEventListener("click", openNotif);
+  back.addEventListener("click", closeNotif);
+  bell.addEventListener("touchend", openNotif, {passive:false});
+  back.addEventListener("touchend", closeNotif, {passive:false});
+
+  function syncDot(){
+    dot.style.display = document.querySelector(".ncard.unread") ? "block" : "none";
+  }
+  // delegated: works for taps anywhere inside a card, on any device
+  document.getElementById("notif-scroll").addEventListener("click", function(e){
+    var c = e.target.closest(".ncard");
+    if(c){ c.classList.remove("unread"); syncDot(); }
+  });
+  syncDot();
+
+  var chips = document.querySelectorAll("#notif-chips .chip-f");
+  document.getElementById("notif-chips").addEventListener("click", function(e){
+    var ch = e.target.closest(".chip-f");
+    if(!ch) return;
+    chips.forEach(function(x){ x.classList.remove("on"); });
+    ch.classList.add("on");
+    var f = ch.dataset.f;
+    document.querySelectorAll("#notif-scroll .ncard").forEach(function(c){
+      c.style.display = (f === "all" || c.dataset.cat.split(" ").indexOf(f) !== -1) ? "flex" : "none";
+    });
+    document.querySelectorAll("#notif-scroll [data-day]").forEach(function(h){
+      var el = h.nextElementSibling, any = false;
+      while(el && !el.hasAttribute("data-day")){
+        if(el.classList.contains("ncard") && el.style.display !== "none") any = true;
+        el = el.nextElementSibling;
+      }
+      h.style.display = any ? "block" : "none";
+    });
+    document.getElementById("notif-scroll").scrollTop = 0;
+  });
+})();
+</script>
+
+<script>
+(function(){
+  // enable CSS :active states on iOS (touch-action:manipulation already
+  // handles double-tap zoom natively - no JS interception needed)
+  document.addEventListener('touchstart', function(){}, {passive:true});
+  // fire keyboard keys on touchstart for zero-latency typing
+  document.querySelectorAll('.kb .key, .kb .space, .kb .ret').forEach(function(k){
+    k.addEventListener('touchstart', function(e){
+      e.preventDefault();
+      k.click();
+    }, {passive:false});
+  });
+})();
+</script>
+
+<script>
+(function(){
+  var device = document.getElementById('device');
+  function fit(){
+    var w = window.innerWidth, h = window.innerHeight;
+    var coarse = window.matchMedia('(pointer:coarse)').matches;
+    if(w <= 479 || (coarse && w <= 940)){
+      device.style.transform = '';           // real device: full-bleed, no mockup
+      return;
+    }
+    // scale the whole mockup (423x882) to fit, with a little breathing room
+    var scale = Math.min(w / 423, h / 882) * 0.94;
+    device.style.transform = 'scale(' + scale + ')';
+  }
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', fit);
+  fit();
+})();
+</script>
+</body>
+</html>
