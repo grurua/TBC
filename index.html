@@ -340,7 +340,7 @@
   .chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:8px 16px 4px;}
   .chips::-webkit-scrollbar{display:none;}
   .chip-f{flex:0 0 auto;height:36px;padding:0 15px;border-radius:10px;border:1px solid #E2E7EA;background:#fff;font-size:13.5px;color:var(--ink);cursor:pointer;font-family:inherit;}
-  .chip-f.on{background:#1D46C8;border-color:#1D46C8;color:#fff;font-weight:600;}
+  .chip-f.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600;}
   .notif-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:6px 16px 40px;}
   .notif-scroll::-webkit-scrollbar{display:none;}
   .day-h{font-size:18px;font-weight:800;padding:16px 2px 10px;}
@@ -349,7 +349,7 @@
     padding:15px 14px;margin-bottom:12px;display:flex;gap:12px;cursor:pointer;
     transition:background .3s ease;
   }
-  .ncard.unread{background:#D9D7EE;}
+  .ncard.unread{background:var(--chip);}
   .ncard .nic{width:42px;height:42px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:#fff;}
   .ncard:active{transform:scale(.985);}
   .ncard{transition:background .3s ease, transform .12s ease;}
@@ -363,10 +363,10 @@
   .ncard .offer-tag{display:inline-block;background:#DDF2FA;color:#20303B;font-size:12.5px;border-radius:14px;padding:4px 10px;margin-top:6px;}
   .ncard.unread .offer-tag{background:#CFEAF6;}
   .n-actions{display:flex;align-items:center;gap:18px;margin-top:10px;}
-  .n-btn{border:none;border-radius:10px;background:#E3E1F7;color:#2246C7;font-size:13.5px;font-weight:600;padding:9px 14px;cursor:pointer;font-family:inherit;}
+  .n-btn{border:none;border-radius:10px;background:var(--chip);color:var(--blue);font-size:13.5px;font-weight:600;padding:9px 14px;cursor:pointer;font-family:inherit;}
   .n-btn:active{opacity:.7;}
-  .ncard.unread .n-btn{background:#C9C6EA;}
-  .n-link{border:none;background:none;color:#2246C7;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;padding:9px 0;}
+  .ncard.unread .n-btn{background:#C3E9F8;}
+  .n-link{border:none;background:none;color:var(--blue);font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;padding:9px 0;}
   .n-declined{color:var(--red);font-size:13.5px;font-weight:600;margin-top:10px;}
   .n-confirmed{color:var(--sub);font-size:13.5px;margin-top:10px;}
   .n-body{display:flex;gap:10px;margin-top:2px;}
