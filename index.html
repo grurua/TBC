@@ -192,9 +192,23 @@
     flex:1;height:48px;border-radius:24px;background:#E9EDF0;
     display:flex;align-items:center;gap:9px;padding:0 12px 0 14px;cursor:text;
   }
-  .search-box .q{display:flex;align-items:center;font-size:16.5px;min-width:0;overflow:hidden;white-space:nowrap;}
+  .search-box .q{display:flex;align-items:center;flex:1;font-size:16.5px;min-width:0;overflow:hidden;white-space:nowrap;}
   .search-box .q .txt{color:var(--ink);font-weight:500;}
   .search-box .q .ph{color:#A6AEB6;}
+  /* rotating example-query placeholder, cycling every ~1.6s within an 8s loop */
+  .ph-rotator{position:relative;flex:1;min-width:0;height:22px;overflow:hidden;}
+  .ph-item{
+    position:absolute;left:0;top:0;right:0;color:#A6AEB6;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    opacity:0;transform:translateY(60%);
+    animation:phRotate 8s infinite;
+  }
+  @keyframes phRotate{
+    0%{opacity:0;transform:translateY(60%);animation-timing-function:cubic-bezier(.45,1.45,.8,1);}
+    4%{opacity:1;transform:translateY(0);}
+    20%{opacity:1;transform:translateY(0);animation-timing-function:ease-in;}
+    28%,100%{opacity:0;transform:translateY(-60%);}
+  }
   .caret{width:2px;height:20px;background:var(--blue);border-radius:2px;flex:0 0 auto;transform-origin:center;animation:blink 1.1s steps(1) infinite, popIn .3s cubic-bezier(.45,1.45,.8,1);}
   @keyframes blink{50%{opacity:0;}}
   @keyframes popIn{0%{transform:scale(.3);opacity:0;}100%{transform:scale(1);opacity:1;}}
@@ -246,10 +260,10 @@
   .hl{color:var(--blue);}
 
   /* most used grid */
-  .mu-grid{display:grid;grid-template-columns:repeat(4,1fr);row-gap:18px;column-gap:2px;padding:14px 4px;}
+  .mu-grid{display:grid;grid-template-columns:repeat(4,1fr);row-gap:18px;column-gap:2px;}
   .mu{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:none;background:none;}
   .mu:active{opacity:.6;}
-  .mu .b{width:48px;height:48px;border-radius:50%;background:var(--chip);color:var(--blue);display:flex;align-items:center;justify-content:center;}
+  .mu .b{width:40px;height:40px;border-radius:50%;background:rgba(0,173,238,.1);color:var(--blue);display:flex;align-items:center;justify-content:center;}
   .mu span{font-size:12px;color:var(--ink);line-height:1.25;text-align:center;}
   .mu-extra{display:none;}
   .mu-grid.expanded .mu-extra{display:flex;}
@@ -648,7 +662,7 @@
       <!-- ===== START ===== -->
       <div class="panel active" id="panel-start">
         <div class="sec"><b>Most used</b><a id="mu-toggle">Show more</a></div>
-        <div class="group mu-grid" id="mu-group" style="padding:14px 4px;">
+        <div class="group mu-grid" id="mu-group">
           <button class="mu" data-q="Trans"><span class="b"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="8" cy="6.5" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M3 17c.6-3 2.6-4.5 5-4.5 1 0 2 .3 2.8.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M13 13.5 19 12l-1.5 6-2-2.4-2.5.9V13.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span>Transfer to someone</span></button>
           <button class="mu" data-q="Pay"><span class="b"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M6 3h10v16l-2.5-1.6L11 19l-2.5-1.6L6 19V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 7.5h4.5M9 10.5h4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><span>Pay Bills</span></button>
           <button class="mu" data-q="Trans"><span class="b"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2.5" y="6" width="13" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M2.5 9.5h13" stroke="currentColor" stroke-width="1.7"/><path d="M17 8.5a4.5 4.5 0 1 1-3 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="m14.5 16-1 1.6 1.9.3" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span><span>From other bank 24/7</span></button>
@@ -1322,6 +1336,14 @@
     loyalty:'panel-loyalty', empty:'panel-empty'
   };
 
+  const PLACEHOLDER_PHRASES = [
+    'Search anything',
+    'Search "Exchange USD"',
+    'Search "Deposit"',
+    "Search your friend's name",
+    'Search bill payment title'
+  ];
+
   // ---- state ----
   let q = '';
   let searchOpen = false;
@@ -1381,7 +1403,9 @@
       qRender.innerHTML = '<span class="txt">' + esc(q) + '</span><span class="caret"></span>';
     } else {
       box.classList.remove('has-q');
-      qRender.innerHTML = '<span class="caret"></span><span class="ph">Search anything</span>';
+      qRender.innerHTML = '<span class="caret"></span><span class="ph-rotator">'
+        + PLACEHOLDER_PHRASES.map((p, i) => '<span class="ph-item" style="animation-delay:' + (i * 1.6) + 's">' + esc(p) + '</span>').join('')
+        + '</span>';
     }
     // panel
     const key = resolve(q);
