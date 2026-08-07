@@ -81,6 +81,9 @@
   /* ---------- Screens ---------- */
   .screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);}
   .screen.hidden{display:none;}
+  /* own stacking context so children's z-index (e.g. bottom-nav:40) can't
+     leak above #screen-search's overlay (z-index:30) while it's open */
+  #screen-home, #screen-products{z-index:1;}
   .scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .scroll::-webkit-scrollbar{display:none;}
 
