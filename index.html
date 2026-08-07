@@ -932,13 +932,23 @@
     </div>
     <div class="chips" id="notif-chips">
       <button class="chip-f on" data-f="all">All</button>
+      <button class="chip-f" data-f="money">Money &amp; transactions</button>
       <button class="chip-f" data-f="action">Action required</button>
+      <button class="chip-f" data-f="info">Info</button>
       <button class="chip-f" data-f="offer">Offers</button>
-      <button class="chip-f" data-f="money">Money and transfers</button>
+      <button class="chip-f" data-f="insights">Insights &amp; suggestions</button>
+      <button class="chip-f" data-f="personal">Personal moments</button>
     </div>
     <div class="notif-scroll" id="notif-scroll">
       <div class="day-h" data-day>Today</div>
-      <div class="ncard unread" data-cat="action money">
+      <div class="ncard unread" data-cat="money">
+          <span class="nic" style="background:#17B26A;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M11 16V6M11 6 6.5 10.5M11 6l4.5 4.5" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <div class="nc">
+            <div class="nrow1"><span class="nt">Payment received</span><span class="ntime">2m</span></div>
+            <div class="nsub">+130.00 GEL from Nino Giorgadze</div>
+          </div>
+        </div>
+      <div class="ncard unread" data-cat="action">
           <span class="nic" style="background:#F0C33C;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M11 3a5.2 5.2 0 0 0-3 9.4c.6.5 1 1.1 1 1.8v.3h4v-.3c0-.7.4-1.3 1-1.8A5.2 5.2 0 0 0 11 3Z" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/><path d="M9.3 17h3.4M10 19.3h2" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg></span>
           <div class="nc">
             <div class="nrow1"><span class="nt">Upcoming bill reminder</span><span class="ntime">5m</span></div>
@@ -952,7 +962,7 @@
             <div class="n-body"><div class="txt"><span class="offer-tag">Offers for you</span><div class="nsub">Only on weekend, Loan with more discount</div><div class="n-actions"><button class="n-btn">Check Your Limit</button></div></div><span class="n-thumb"><svg width="88" height="74" viewBox="0 0 88 74"><rect width="88" height="74" fill="#C8B49B"/><rect y="46" width="88" height="28" fill="#8A6F55"/><rect x="8" y="40" width="72" height="18" rx="8" fill="#D8CDBB"/><circle cx="30" cy="30" r="9" fill="#B08968"/><circle cx="52" cy="28" r="9" fill="#8C5F43"/><rect x="22" y="38" width="18" height="14" rx="6" fill="#5E7A8A"/><rect x="44" y="36" width="18" height="16" rx="6" fill="#CC7777"/><circle cx="68" cy="18" r="10" fill="#7FA36B" opacity=".8"/></svg></span></div>
           </div>
         </div>
-      <div class="ncard" data-cat="action money">
+      <div class="ncard" data-cat="action">
           <span class="nic" style="background:#F0C33C;"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="7.2" stroke="#fff" stroke-width="1.7"/><text x="11" y="14.6" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" font-family="inherit">₾</text></svg></span>
           <div class="nc">
             <div class="nrow1"><span class="nt">Loan payment reminder</span><span class="ntime">12m</span></div>
@@ -960,7 +970,7 @@
           </div>
         </div>
       <div class="day-h" data-day>Yesterday</div>
-      <div class="ncard" data-cat="money">
+      <div class="ncard" data-cat="insights">
           <span class="nic" style="background:#2CA9E1;"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="M6 16v-4M11 16V7M16 16v-6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M4 19h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
           <div class="nc">
             <div class="nrow1"><span class="nt">Weekly summary is ready!</span><span class="ntime">09:45</span></div>
@@ -974,7 +984,7 @@
             <div class="nsub">This is a KYC-related notification. Some features are currently unavailable because your KYC is incomplete.</div><div class="n-actions"><button class="n-btn">Update KYC</button></div>
           </div>
         </div>
-      <div class="ncard" data-cat="money">
+      <div class="ncard" data-cat="info">
           <span class="nic line"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="m7.5 11 2.3 2.3L14.7 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           <div class="nc">
             <div class="nrow1"><span class="nt">Credit card activated</span><span class="ntime">09:45</span></div>
@@ -995,7 +1005,7 @@
             <div class="n-body"><div class="txt"><span class="offer-tag">Offers for you</span><div class="nsub">You often check your balance, try enabling quick balance view on your home&hellip;</div></div><span class="n-thumb"><svg width="88" height="74" viewBox="0 0 88 74"><rect width="88" height="74" fill="#8A2BE2"/><circle cx="44" cy="30" r="13" fill="#C99B76"/><path d="M31 30c0-14 26-14 26 0v10H31V30Z" fill="#3A2A20"/><rect x="28" y="44" width="32" height="30" rx="10" fill="#F2F2F2"/><rect x="46" y="30" width="14" height="20" rx="3" transform="rotate(18 46 30)" fill="#B98BEF" stroke="#fff" stroke-width="1.5"/></svg></span></div>
           </div>
         </div>
-      <div class="ncard" data-cat="info">
+      <div class="ncard" data-cat="personal">
           <span class="nic" style="background:#E85BB4;"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="m5 17 3.2-8.5L14 14 5 17Z" fill="#fff"/><path d="M13 8.5c1.2-1.2 3-1.4 4.5-.6M11.5 5.5c.2-1.2 1-2.1 2.2-2.5M15.5 12c1 .2 1.8.8 2.3 1.7" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/><circle cx="16.5" cy="4.5" r="1" fill="#fff"/></svg></span>
           <div class="nc">
             <div class="nrow1"><span class="nt">Dear Mariam, Happy Birthday!</span><span class="ntime">09:45</span></div>
@@ -1038,7 +1048,7 @@
             <div class="nsub">Due to the public holiday, branch operating hours will be adjusted on June 19, 2026. Check details in the app.</div>
           </div>
         </div>
-      <div class="ncard" data-cat="action">
+      <div class="ncard" data-cat="info">
           <span class="nic line"><svg width="19" height="19" viewBox="0 0 22 22" fill="none"><path d="M11 2.8 18 6.9v8.2L11 19.2 4 15.1V6.9L11 2.8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M11 8v5M8.8 10.8 11 13l2.2-2.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           <div class="nc">
             <div class="nrow1"><span class="nt">App update available</span><span class="ntime">09:45</span></div>
