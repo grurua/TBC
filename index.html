@@ -1429,6 +1429,31 @@
   // The cancel button and keyboard settle via real spring physics rather
   // than a CSS ease, matching the motion spec's mass/stiffness/damping.
   let stopBtnSpring, stopKbSpring;
+  let kbVisible = false;
+
+  function showKeyboard(){
+    if(kbVisible) return;
+    kbVisible = true;
+    search.classList.add('kb-open');
+    const kbHeight = kb.offsetHeight || 291;
+    kb.style.transition = 'none';
+    kb.style.transform = `translateY(${kbHeight}px)`;
+    if(stopKbSpring) stopKbSpring();
+    stopKbSpring = animateSpring(kbHeight, 0, {stiffness:100, damping:15}, y => {
+      kb.style.transform = `translateY(${y}px)`;
+    });
+  }
+  function hideKeyboard(){
+    if(!kbVisible) return;
+    kbVisible = false;
+    search.classList.remove('kb-open');
+    const kbHeight = kb.offsetHeight || 291;
+    if(stopKbSpring) stopKbSpring();
+    stopKbSpring = animateSpring(0, kbHeight, {stiffness:100, damping:15}, y => {
+      kb.style.transform = `translateY(${y}px)`;
+    });
+  }
+
   function openSearch(preset){
     searchOpen = true;
     setQuery(preset || '');
@@ -1436,7 +1461,6 @@
     closeBtn.style.opacity = '0';
     requestAnimationFrame(() => {
       search.classList.add('open');
-      search.classList.add('kb-open');
 
       if(stopBtnSpring) stopBtnSpring();
       stopBtnSpring = animateSpring(0, 1, {stiffness:300, damping:20}, t => {
@@ -1444,18 +1468,11 @@
         closeBtn.style.opacity = t;
       });
 
-      const kbHeight = kb.offsetHeight || 291;
-      kb.style.transition = 'none';
-      kb.style.transform = `translateY(${kbHeight}px)`;
-      if(stopKbSpring) stopKbSpring();
-      stopKbSpring = animateSpring(kbHeight, 0, {stiffness:100, damping:15}, y => {
-        kb.style.transform = `translateY(${y}px)`;
-      });
+      showKeyboard();
     });
   }
   function closeSearch(){
     searchOpen = false;
-    search.classList.remove('kb-open');
     search.classList.remove('open');
 
     if(stopBtnSpring) stopBtnSpring();
@@ -1464,14 +1481,14 @@
       closeBtn.style.opacity = t;
     });
 
-    const kbHeight = kb.offsetHeight || 291;
-    if(stopKbSpring) stopKbSpring();
-    stopKbSpring = animateSpring(0, kbHeight, {stiffness:100, damping:15}, y => {
-      kb.style.transform = `translateY(${y}px)`;
-    });
-
+    hideKeyboard();
     q = '';
   }
+
+  // hide the keyboard once the results start scrolling; tapping back
+  // into the search field brings it back
+  scroll.addEventListener('scroll', hideKeyboard, {passive:true});
+  box.addEventListener('click', showKeyboard);
 
   document.getElementById('open-search').addEventListener('click', () => openSearch());
   document.getElementById('close-search').addEventListener('click', closeSearch);
