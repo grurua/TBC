@@ -9,7 +9,7 @@
 <title>TBC Concept — Search Prototype</title>
 <style>
   :root{
-    --blue:#00A3E0;
+    --blue:#00ADEE;
     --blue-soft:#E5F6FC;
     --ink:#242B33;
     --ink-2:#3A424B;
@@ -23,7 +23,7 @@
     --chip:#DFF4FC;
     --r-lg:20px;
     --r-md:16px;
-    --shadow:0 1px 2px rgba(36,43,51,.04), 0 4px 14px rgba(36,43,51,.05);
+    --shadow:0 0 1px rgba(0,30,45,.2), 0 2px 8px -1px rgba(0,30,45,.03);
     font-size:16px;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
@@ -211,12 +211,13 @@
   @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
 
   .sec{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 8px;}
-  .sec b{font-size:15.5px;font-weight:700;}
+  .sec b{font-size:14px;font-weight:700;}
   .sec a{font-size:14.5px;color:var(--blue);font-weight:600;text-decoration:none;cursor:pointer;}
 
-  .group{background:#fff;border-radius:var(--r-lg);box-shadow:var(--shadow);padding:6px 14px;}
+  .group{background:#fff;border-radius:var(--r-lg);box-shadow:var(--shadow);padding:24px 12px;}
 
-  .row{display:flex;align-items:center;gap:12px;padding:11px 0;cursor:pointer;}
+  .row{display:flex;align-items:center;gap:12px;padding:0;cursor:pointer;}
+  .group .row + .row{margin-top:16px;}
   .row:active{opacity:.65;}
   .row .av{
     width:42px;height:42px;border-radius:50%;flex:0 0 auto;
@@ -229,8 +230,8 @@
     background:var(--green);border:2px solid #fff;display:flex;align-items:center;justify-content:center;
   }
   .row .rt{flex:1;min-width:0;}
-  .row .rt b{display:block;font-size:15.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .row .rt span{display:block;font-size:13px;color:var(--sub);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .row .rt b{display:block;font-size:14px;line-height:1.5;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .row .rt span{display:block;font-size:12px;line-height:1.5;color:var(--sub);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .row .rt .hl{display:inline;color:var(--blue);}
   .row .amt{text-align:right;white-space:nowrap;}
   .row .amt b{display:block;font-size:15px;font-weight:700;}
@@ -262,15 +263,15 @@
   /* transfer hero (Gio) */
   .hero{background:#fff;border-radius:var(--r-lg);box-shadow:var(--shadow);padding:18px 16px 16px;margin-top:8px;}
   .hero .who{display:flex;align-items:center;gap:12px;}
-  .hero .who .av{width:44px;height:44px;border-radius:50%;background:#EFE9FB;color:#8B7AC1;font-weight:700;display:flex;align-items:center;justify-content:center;}
-  .hero .who b{display:block;font-size:15.5px;}
-  .hero .who span{font-size:13px;color:var(--sub);}
-  .hero .big{font-size:34px;font-weight:800;text-align:center;margin:18px 0 16px;}
+  .hero .who .av{width:44px;height:44px;border-radius:50%;background:#F3EEFA;color:#A49DF5;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  .hero .who b{display:block;font-size:14px;line-height:1.5;}
+  .hero .who span{font-size:12px;line-height:1.5;color:var(--sub);}
+  .hero .big{font-size:28px;font-weight:800;text-align:center;margin:18px 0 16px;}
   .btn-primary{
-    width:100%;height:50px;border:none;border-radius:25px;background:#2CB4E8;
+    width:100%;height:50px;border:none;border-radius:25px;background:var(--blue);
     color:#fff;font-size:16.5px;font-weight:600;cursor:pointer;
   }
-  .btn-primary:active{background:#1FA5DA;}
+  .btn-primary:active{background:#0092C7;}
 
   /* exchange hero */
   .fx-box{border:1px solid var(--line);border-radius:var(--r-md);padding:14px;position:relative;}
@@ -773,23 +774,23 @@
 
         <div class="sec"><b>Recipients</b><a>Show more</a></div>
         <div class="group">
-          <div class="row"><span class="av" style="background:#EFE9FB;color:#8B7AC1;">GM</span><div class="rt"><b class="m">Giorgi Mikeladze</b><span>+995 599 704 230</span></div></div>
-          <div class="row"><span class="av" style="background:#E2F6EC;color:#2BA46B;">NG</span><div class="rt"><b class="m">Nino Giorgadze</b><span>GE05TB****0128 ₾</span></div></div>
+          <div class="row"><span class="av" style="background:#F3EEFA;color:#A49DF5;">GM</span><div class="rt"><b class="m">Giorgi Mikeladze</b><span>+995 599 704 230</span></div></div>
+          <div class="row"><span class="av" style="background:#DDF8DF;color:#1ABE6A;">NG</span><div class="rt"><b class="m">Nino Giorgadze</b><span>GE05TB****0128 ₾</span></div></div>
           <div class="row"><span class="av" style="background:linear-gradient(135deg,#C9CFD6,#8F9AA5);">KG</span><div class="rt"><b class="m">Keti Gilauri</b><span>+995 599 310 452</span></div></div>
         </div>
 
         <div class="sec"><b>Transactions</b><a>See all</a></div>
         <div class="group">
-          <div class="row"><span class="av" style="background:#D9DEF3;color:#6C79B8;">GS<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Giovani Santos</b><span>13 Aug, 12:45</span></div><div class="amt"><b>45.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:#EDF0FF;color:#85A3FF;">GS<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Giovani Santos</b><span>13 Aug, 12:45</span></div><div class="amt"><b>45.00₾</b></div></div>
           <div class="row"><span class="av" style="background:linear-gradient(135deg,#B8927A,#7E6350);">GD<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Gigi Danelia</b><span>13 Aug, 12:45</span></div><div class="amt"><b>130.00₾</b></div></div>
-          <div class="row"><span class="av" style="background:#E2F6EC;color:#2BA46B;">GM<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Guram Machavariani</b><span>13 Aug, 12:45</span></div><div class="amt"><b>240.94₾</b></div></div>
+          <div class="row"><span class="av" style="background:#DCF5FF;color:#00AFCF;">GM<span class="badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5.2 4.1 7.3 8 3.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div class="rt"><b class="m">Guram Machavariani</b><span>13 Aug, 12:45</span></div><div class="amt"><b>240.94₾</b></div></div>
         </div>
 
         <div class="sec"><b>Payments</b><a>See all</a></div>
         <div class="group">
           <div class="row"><span class="av" style="background:#111;font-size:6.5px;line-height:1;text-align:center;">USA2<br>GEORGIA</span><div class="rt"><b class="m">USA2Georgia</b><span>ID: 3573584</span></div><div class="amt"><b>0.00₾</b></div></div>
           <div class="row"><span class="av" style="background:#111;font-size:8px;letter-spacing:.5px;">SOCAR</span><div class="rt"><b class="m">Socar Georgia</b><span>ID: 3573584</span></div><div class="amt"><b class="neg">25.00₾</b></div></div>
-          <div class="row"><span class="av" style="background:#0B2A8A;"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" fill="#0B2A8A"/><path d="M7 11c1.6-3.4 6.4-3.4 8 0-1.6 3.4-6.4 3.4-8 0Z" fill="#3FB6E8"/><circle cx="11" cy="11" r="1.7" fill="#fff"/></svg></span><div class="rt"><b class="m">Silknet</b><span>ID: 3573584</span></div><div class="amt"><b class="neg">85.00₾</b></div></div>
+          <div class="row"><span class="av" style="background:#2C4BAE;"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" fill="#2C4BAE"/><path d="M8.3 8c-2 0-3 2.7-.6 3.6 2.8 1 1.4 3.6-.6 3.6M13.7 8c2 0 3 2.7.6 3.6-2.8 1-1.4 3.6.6 3.6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></span><div class="rt"><b class="m">Silknet</b><span>ID: 3573584</span></div><div class="amt"><b class="neg">85.00₾</b></div></div>
         </div>
 
         <div class="sec"><b>Help on the topic</b><a>See all</a></div>
@@ -1322,14 +1323,29 @@
   // ---- rendering ----
   function esc(str){ return str.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+  // finds the longest prefix of the query (min 2 chars) that appears
+  // anywhere in text, falling back to shorter prefixes when the full
+  // query isn't found (e.g. "Gio" -> no match in "Gilauri", but "Gi" is)
+  function findMatch(text, query){
+    const t = text.toLowerCase();
+    let q = query;
+    while(q.length >= 2){
+      const i = t.indexOf(q);
+      if(i !== -1) return {start:i, len:q.length};
+      q = q.slice(0, -1);
+    }
+    return null;
+  }
+
   function highlight(panelEl, query){
     const s = query.trim().toLowerCase();
     panelEl.querySelectorAll('.m').forEach(el => {
       const t = el.dataset.t;
       if(!s){ el.textContent = t; return; }
-      const i = t.toLowerCase().indexOf(s);
-      if(i === -1){ el.textContent = t; return; }
-      el.innerHTML = esc(t.slice(0,i)) + '<span class="hl">' + esc(t.slice(i, i+s.length)) + '</span>' + esc(t.slice(i+s.length));
+      const match = findMatch(t, s);
+      if(!match){ el.textContent = t; return; }
+      const i = match.start, len = match.len;
+      el.innerHTML = esc(t.slice(0,i)) + '<span class="hl">' + esc(t.slice(i, i+len)) + '</span>' + esc(t.slice(i+len));
     });
   }
 
